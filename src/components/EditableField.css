@@ -1,0 +1,104 @@
+.editable-field {
+  position: relative;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.editable-field:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.editable-field .edit-button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  padding: 4px 8px;
+  background-color: var(--lime);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--black);
+}
+
+.editable-field:hover .edit-button {
+  opacity: 1;
+}
+
+.editable-field.editing {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 12px;
+}
+
+.editable-field.editing input {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid var(--lime);
+  background-color: rgba(0, 0, 0, 0.2);
+  color: var(--white);
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.edit-actions button {
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-actions button:first-child {
+  background-color: var(--lime);
+  color: var(--black);
+}
+
+.edit-actions button:last-child {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--white);
+}
+
+.saving-indicator {
+  background-color: var(--lime);
+  color: var(--black);
+  padding: 8px 16px;
+  border-radius: 4px;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.error-message {
+  background-color: #ff4646;
+  color: var(--white);
+  padding: 8px 16px;
+  border-radius: 4px;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

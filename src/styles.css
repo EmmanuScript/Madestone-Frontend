@@ -1,0 +1,312 @@
+:root {
+  --lime: #c7f464;
+  --black: #000;
+  --white: #fff;
+}
+body {
+  font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, Helvetica,
+    sans-serif;
+  background-color: #0f1724;
+  /* uniform subtle dotted pattern over a dark gradient */
+  background-image: radial-gradient(
+      rgba(199, 244, 100, 0.04) 1px,
+      transparent 1px
+    ),
+    linear-gradient(180deg, #071124 0%, #0f1724 100%);
+  background-size: 28px 28px, auto;
+  background-repeat: repeat, no-repeat;
+  margin: 0;
+  padding: 28px;
+  color: var(--white);
+}
+.page {
+  display: flex;
+  justify-content: center;
+}
+
+/* Login container: header at top, login card centered in remaining space */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.login-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.site-header {
+  text-align: center;
+  color: #dfffe3;
+  margin: 20px 0 8px 0;
+}
+.card {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.02)
+  );
+  border-radius: 12px;
+  padding: 22px;
+  min-width: 400px;
+  max-width: 1000px;
+  box-shadow: 0 8px 30px rgba(2, 6, 23, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Headings readability */
+.card h2,
+.card h3 {
+  color: #eaffd6;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+/* Form controls: fix contrast for dark theme */
+input,
+select,
+textarea {
+  display: block;
+  padding: 8px;
+  margin: 8px 0;
+  width: 100%;
+  box-sizing: border-box;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #b8f06a;
+  box-shadow: 0 0 0 2px rgba(184, 240, 106, 0.25);
+}
+
+/* Better placeholder visibility */
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Some browsers honor option styling; provide a light dropdown if used */
+select option {
+  color: #0a2418;
+  background: #ecffe0;
+}
+button {
+  background: linear-gradient(90deg, #b8f06a, #83d23a);
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #042018;
+  font-weight: 600;
+}
+button:hover {
+  filter: brightness(0.95);
+}
+.error {
+  color: red;
+  margin-top: 8px;
+}
+.students {
+  width: 100%;
+  border-collapse: collapse;
+}
+.students th,
+.students td {
+  border: none;
+  padding: 12px 10px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+/* Table header readability */
+.students th {
+  font-weight: 800;
+  color: #eaffd6;
+}
+
+/* Student name as colorful bar */
+.students td:first-child {
+  width: 60%;
+}
+.students td:first-child button {
+  display: inline-block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: #042018;
+  background: linear-gradient(
+    90deg,
+    rgba(199, 244, 100, 0.98),
+    rgba(130, 210, 58, 0.92)
+  );
+  box-shadow: 0 8px 22px rgba(60, 120, 80, 0.14);
+  font-weight: 800;
+}
+
+/* Keep action buttons on same line */
+.students td:last-child {
+  white-space: nowrap;
+}
+
+/* Subtle row card look */
+.students tbody tr {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.01)
+  );
+  margin-bottom: 8px;
+  border-radius: 10px;
+}
+
+/* Attendance buttons */
+.students td > button:not(:first-child) {
+  background: linear-gradient(90deg, #fff2, #e6e6e6);
+  color: #022;
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-left: 6px;
+}
+
+.site-header h1 {
+  margin: 6px 0;
+  font-size: 28px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+.site-header p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Login card special */
+.login-card {
+  max-width: 420px;
+  padding: 28px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.02)
+  );
+}
+.login-title {
+  color: #eaffd6;
+  margin: 6px 0 14px 0;
+}
+
+.login-card label {
+  display: block;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 8px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+/* Admin list/grid helpers */
+.list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.card-small {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.01)
+  );
+}
+.coach-left,
+.student-box-left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.coach-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #e6ffd6, #a6e67a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #042018;
+  font-weight: 800;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+.muted {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+}
+
+/* Profile card */
+.profile-card {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+.profile-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #e6ffd6, #b8f06a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: #042018;
+  font-weight: 900;
+}
+.profile-details {
+  flex: 1;
+}
+.profile-details h3 {
+  margin-top: 0;
+}
+
+/* Center/Coach/Student boxes */
+.student-box,
+.coach-box,
+.center-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.01)
+  );
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  .card {
+    margin: 12px;
+    padding: 18px;
+  }
+  .students td {
+    padding: 10px 6px;
+  }
+  .site-header h1 {
+    font-size: 20px;
+  }
+}
