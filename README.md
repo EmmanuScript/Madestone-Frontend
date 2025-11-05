@@ -9,3 +9,7 @@ From the frontend folder:
    npm start
 
 The React app talks to the backend at http://localhost:3001
+
+# Madestone
+
+Madestone Admin Panel
