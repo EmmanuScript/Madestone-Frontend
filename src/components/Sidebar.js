@@ -1,7 +1,7 @@
 import React from "react";
 import "../styles/sidebar.css";
 
-export default function Sidebar({ view, setView, onLogout }) {
+export default function Sidebar({ view, setView, onLogout, userRole = "CEO" }) {
   return (
     <div
       className="ceo-sidebar"
@@ -19,6 +19,12 @@ export default function Sidebar({ view, setView, onLogout }) {
         Coaches
       </button>
 
+      {userRole === "CEO" && (
+        <button style={{ marginBottom: 4 }} onClick={() => setView("admins")}>
+          Admins
+        </button>
+      )}
+
       <button style={{ marginBottom: 4 }} onClick={() => setView("centers")}>
         Centers
       </button>
@@ -29,6 +35,42 @@ export default function Sidebar({ view, setView, onLogout }) {
       >
         Attendance History
       </button>
+
+      {(userRole === "ADMIN" || userRole === "CEO") && (
+        <button
+          style={{ marginBottom: 4 }}
+          onClick={() => setView("mark-attendance")}
+        >
+          Mark Attendance
+        </button>
+      )}
+
+      {(userRole === "ADMIN" || userRole === "CEO") && (
+        <button
+          style={{ marginBottom: 4 }}
+          onClick={() => setView("coach-attendance")}
+        >
+          Coach Attendance
+        </button>
+      )}
+
+      {(userRole === "ADMIN" || userRole === "CEO") && (
+        <button
+          style={{ marginBottom: 4 }}
+          onClick={() => setView("coach-attendance-history")}
+        >
+          Coach Attendance History
+        </button>
+      )}
+
+      {userRole === "CEO" && (
+        <button
+          style={{ marginBottom: 4 }}
+          onClick={() => setView("preferences")}
+        >
+          Preferences
+        </button>
+      )}
 
       <button style={{ marginTop: 12 }} onClick={onLogout}>
         Logout

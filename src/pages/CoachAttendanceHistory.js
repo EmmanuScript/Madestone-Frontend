@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 
-export default function AttendanceHistory({ token, onStudentClick }) {
+export default function CoachAttendanceHistory({ token, onCoachClick }) {
   const [centers, setCenters] = useState([]);
-  const [students, setStudents] = useState([]);
+  const [coaches, setCoaches] = useState([]);
   const [centerId, setCenterId] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -12,7 +12,7 @@ export default function AttendanceHistory({ token, onStudentClick }) {
 
   useEffect(() => {
     fetchCenters();
-    fetchStudents();
+    fetchCoaches();
   }, []);
 
   async function fetchCenters() {
@@ -22,18 +22,18 @@ export default function AttendanceHistory({ token, onStudentClick }) {
     setCenters(await res.json());
   }
 
-  async function fetchStudents() {
-    const res = await fetch("http://localhost:5000/students", {
+  async function fetchCoaches() {
+    const res = await fetch("http://localhost:5000/users/coaches", {
       headers: { Authorization: "Bearer " + token },
     });
-    setStudents(await res.json());
+    setCoaches(await res.json());
   }
 
   function daysBetween(s, e) {
     if (!s || !e) return 0;
     const a = new Date(s);
     const b = new Date(e);
-    const diff = Math.ceil((b - a) / (1000 * 60 * 60 * 24)) + 1; // inclusive
+    const diff = Math.ceil((b - a) / (1000 * 60 * 60 * 24)) + 1;
     return diff;
   }
 
@@ -50,10 +50,10 @@ export default function AttendanceHistory({ token, onStudentClick }) {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/attendance/center/${centerId}?start=${start}&end=${end}`,
+        `http://localhost:5000/coach-attendance/center/${centerId}?start=${start}&end=${end}`,
         { headers: { Authorization: "Bearer " + token } }
       );
-      if (!res.ok) throw new Error("Failed to fetch attendance");
+      if (!res.ok) throw new Error("Failed to fetch coach attendance");
       const data = await res.json();
       setRecords(data);
     } catch (err) {
@@ -67,10 +67,9 @@ export default function AttendanceHistory({ token, onStudentClick }) {
     if (!centerId) return setError("Select a center to export");
     if (!start || !end)
       return setError("Start and end dates are required for export");
-    // allow export for any range
     try {
       const res = await fetch(
-        `http://localhost:5000/attendance/export/center/${centerId}?start=${start}&end=${end}`,
+        `http://localhost:5000/coach-attendance/export/center/${centerId}?start=${start}&end=${end}`,
         { headers: { Authorization: "Bearer " + token } }
       );
       if (!res.ok) throw new Error("Export failed");
@@ -79,7 +78,7 @@ export default function AttendanceHistory({ token, onStudentClick }) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `attendance-center-${centerId}.csv`;
+      a.download = `coach-attendance-center-${centerId}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -89,41 +88,39 @@ export default function AttendanceHistory({ token, onStudentClick }) {
     }
   };
 
-  // Group records by student
+  // Group records by coach
   const groupedData = {};
   const allDates = new Set();
 
   records.forEach((record) => {
-    const studentId = record.student?.id;
-    const studentName = record.student?.name || "Unknown";
-    const centerName = record.student?.center?.name || "-";
-    const category = record.student?.category || "-";
+    const coachId = record.coach?.id;
+    const coachName = record.coach?.name || "Unknown";
+    const centerName = record.coach?.center?.name || "-";
     const date = record.date;
 
-    if (!groupedData[studentId]) {
-      groupedData[studentId] = {
-        id: studentId,
-        name: studentName,
+    if (!groupedData[coachId]) {
+      groupedData[coachId] = {
+        id: coachId,
+        name: coachName,
         center: centerName,
-        category: category,
         dates: {},
       };
     }
 
-    groupedData[studentId].dates[date] = record.present ? "✓" : "✗";
+    groupedData[coachId].dates[date] = record.present ? "✓" : "✗";
     allDates.add(date);
   });
 
   const sortedDates = Array.from(allDates).sort();
-  const studentsData = Object.values(groupedData);
+  const coachesData = Object.values(groupedData);
 
-  const studentsForCenter = centerId
-    ? students.filter((s) => s.center?.id === Number(centerId))
-    : students;
+  const coachesForCenter = centerId
+    ? coaches.filter((c) => c.center?.id === Number(centerId))
+    : coaches;
 
   return (
     <div>
-      <h3>Student Attendance History</h3>
+      <h3>Coach Attendance History</h3>
 
       <div
         style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}
@@ -176,7 +173,7 @@ export default function AttendanceHistory({ token, onStudentClick }) {
 
       {loading && <div>Loading...</div>}
 
-      {!loading && studentsData.length > 0 && (
+      {!loading && coachesData.length > 0 && (
         <div style={{ overflowX: "auto" }}>
           <table
             style={{
@@ -199,34 +196,29 @@ export default function AttendanceHistory({ token, onStudentClick }) {
                     zIndex: 10,
                   }}
                 >
-                  Name
+                  Coach Name
                 </th>
                 <th
                   style={{
                     textAlign: "left",
                     borderBottom: "2px solid #333",
                     padding: "8px",
+                    background: "#f5f5f5",
+                    color: "#111",
                   }}
                 >
                   Center
-                </th>
-                <th
-                  style={{
-                    textAlign: "left",
-                    borderBottom: "2px solid #333",
-                    padding: "8px",
-                  }}
-                >
-                  Category
                 </th>
                 {sortedDates.map((date) => (
                   <th
                     key={date}
                     style={{
-                      textAlign: "center",
                       borderBottom: "2px solid #333",
                       padding: "8px",
-                      whiteSpace: "nowrap",
+                      textAlign: "center",
+                      background: "#f5f5f5",
+                      color: "#111",
+                      minWidth: "80px",
                     }}
                   >
                     {date}
@@ -235,22 +227,20 @@ export default function AttendanceHistory({ token, onStudentClick }) {
               </tr>
             </thead>
             <tbody>
-              {studentsData.map((student, idx) => (
-                <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
+              {coachesData.map((coach) => (
+                <tr key={coach.id}>
                   <td
                     style={{
                       padding: "8px",
-                      fontWeight: "500",
+                      borderBottom: "1px solid #ddd",
                       position: "sticky",
                       left: 0,
-                      background: "#f5f5f5",
+                      background: "#fff",
                       zIndex: 5,
                     }}
                   >
                     <button
-                      onClick={() =>
-                        onStudentClick && onStudentClick(student.id)
-                      }
+                      onClick={() => onCoachClick && onCoachClick(coach.id)}
                       style={{
                         background: "none",
                         border: "none",
@@ -259,33 +249,42 @@ export default function AttendanceHistory({ token, onStudentClick }) {
                         color: "#2a7",
                         textDecoration: "underline",
                         cursor: "pointer",
-                        fontWeight: "500",
                       }}
                     >
-                      {student.name}
+                      {coach.name}
                     </button>
                   </td>
-                  <td style={{ padding: "8px" }}>{student.center}</td>
-                  <td style={{ padding: "8px" }}>{student.category}</td>
-                  {sortedDates.map((date) => (
-                    <td
-                      key={date}
-                      style={{
-                        padding: "8px",
-                        textAlign: "center",
-                        color:
-                          student.dates[date] === "✓"
-                            ? "green"
-                            : student.dates[date] === "✗"
-                            ? "red"
-                            : "#ccc",
-                        fontWeight: "bold",
-                        fontSize: "18px",
-                      }}
-                    >
-                      {student.dates[date] || "-"}
-                    </td>
-                  ))}
+                  <td
+                    style={{
+                      padding: "8px",
+                      borderBottom: "1px solid #ddd",
+                      background: "#fff",
+                    }}
+                  >
+                    {coach.center}
+                  </td>
+                  {sortedDates.map((date) => {
+                    const mark = coach.dates[date] || "-";
+                    const bg =
+                      mark === "✓"
+                        ? "#d4f4dd"
+                        : mark === "✗"
+                        ? "#ffd4d4"
+                        : "transparent";
+                    return (
+                      <td
+                        key={date}
+                        style={{
+                          padding: "8px",
+                          textAlign: "center",
+                          borderBottom: "1px solid #ddd",
+                          background: bg,
+                        }}
+                      >
+                        {mark}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
@@ -293,10 +292,40 @@ export default function AttendanceHistory({ token, onStudentClick }) {
         </div>
       )}
 
-      {!loading && studentsData.length === 0 && records.length === 0 && (
-        <div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
-          No attendance records found. Select a center and date range, then
-          click Fetch.
+      {!loading &&
+        !error &&
+        coachesData.length === 0 &&
+        records.length === 0 && (
+          <div style={{ color: "#666", marginTop: 12 }}>
+            No attendance records found for the selected criteria.
+          </div>
+        )}
+
+      {!loading && centerId && coachesForCenter.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h4>Coaches in Selected Center</h4>
+          <ul>
+            {coachesForCenter.map((coach) => (
+              <li key={coach.id}>
+                <button
+                  onClick={() => onCoachClick && onCoachClick(coach.id)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    margin: 0,
+                    color: "#2a7",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                  }}
+                >
+                  {coach.name}
+                </button>
+                {" - "}
+                {coach.center?.name || "No center"}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

@@ -9,7 +9,13 @@ import "../styles/animations.css";
 import "../styles/profile.css";
 import "../styles/student-profile.css";
 
-function StudentProfile({ id, token, onBack, embed = false }) {
+function StudentProfile({
+  id,
+  token,
+  onBack,
+  embed = false,
+  readOnly = false,
+}) {
   const [student, setStudent] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -105,9 +111,14 @@ function StudentProfile({ id, token, onBack, embed = false }) {
       return;
     }
 
-    // Validate file size (50MB max as per ImgHippo)
-    if (file.size > 50 * 1024 * 1024) {
-      showError("Image size must be less than 50MB");
+    // Validate file size (200KB max)
+    const maxFileSize = 200 * 1024; // 200KB
+    if (file.size > maxFileSize) {
+      showError(
+        `Image must be smaller than 200KB. Current size: ${(
+          file.size / 1024
+        ).toFixed(2)}KB`
+      );
       return;
     }
 
@@ -231,28 +242,30 @@ function StudentProfile({ id, token, onBack, embed = false }) {
                         borderRadius: 10,
                       }}
                     />
-                    <button
-                      onClick={handleDeleteImage}
-                      style={{
-                        position: "absolute",
-                        top: 5,
-                        right: 5,
-                        background: "rgba(255, 0, 0, 0.8)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "50%",
-                        width: 30,
-                        height: 30,
-                        cursor: "pointer",
-                        fontSize: "16px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                      title="Delete image"
-                    >
-                      ×
-                    </button>
+                    {!readOnly && (
+                      <button
+                        onClick={handleDeleteImage}
+                        style={{
+                          position: "absolute",
+                          top: 5,
+                          right: 5,
+                          background: "rgba(255, 0, 0, 0.8)",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "50%",
+                          width: 30,
+                          height: 30,
+                          cursor: "pointer",
+                          fontSize: "16px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                        title="Delete image"
+                      >
+                        ×
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="avatar-placeholder">
@@ -261,28 +274,30 @@ function StudentProfile({ id, token, onBack, embed = false }) {
                 )}
               </div>
               {/* Upload button placed UNDER the picture */}
-              <div style={{ marginTop: 8 }}>
-                <input
-                  type="file"
-                  id="image-upload"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  style={{ display: "none" }}
-                />
-                <label
-                  htmlFor="image-upload"
-                  className="action-button"
-                  style={{
-                    padding: "6px 12px",
-                    fontSize: 13,
-                    display: "inline-block",
-                    cursor: uploading ? "not-allowed" : "pointer",
-                    opacity: uploading ? 0.6 : 1,
-                  }}
-                >
-                  {uploading ? "Uploading..." : "Change Photo"}
-                </label>
-              </div>
+              {!readOnly && (
+                <div style={{ marginTop: 8 }}>
+                  <input
+                    type="file"
+                    id="image-upload"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ display: "none" }}
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className="action-button"
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: 13,
+                      display: "inline-block",
+                      cursor: uploading ? "not-allowed" : "pointer",
+                      opacity: uploading ? 0.6 : 1,
+                    }}
+                  >
+                    {uploading ? "Uploading..." : "Change Photo"}
+                  </label>
+                </div>
+              )}
             </div>
             <div className="profile-details">
               <CSSTransition
@@ -297,6 +312,7 @@ function StudentProfile({ id, token, onBack, embed = false }) {
                       label="Name"
                       value={student.name}
                       onSave={(value) => handleUpdate("name", value)}
+                      readOnly={readOnly}
                     />
                   </h3>
 
@@ -304,34 +320,70 @@ function StudentProfile({ id, token, onBack, embed = false }) {
                     <b>Center:</b> {student.center?.name || "-"}
                   </div>
 
+                  <div className="info-item">
+                    <b>Status:</b>
+                    <span
+                      className={`status-badge ${
+                        student.active ? "active" : "inactive"
+                      }`}
+                      style={{ marginLeft: 8 }}
+                    >
+                      {student.active ? "Active" : "Inactive"}
+                    </span>
+                    {!readOnly && (
+                      <button
+                        onClick={() => handleUpdate("active", !student.active)}
+                        className="action-button"
+                        style={{
+                          marginLeft: 10,
+                          padding: "4px 12px",
+                          fontSize: "13px",
+                          background: student.active
+                            ? "rgba(255, 100, 100, 0.2)"
+                            : "rgba(100, 255, 100, 0.2)",
+                          border: student.active
+                            ? "1px solid rgba(255, 100, 100, 0.5)"
+                            : "1px solid rgba(100, 255, 100, 0.5)",
+                        }}
+                      >
+                        {student.active ? "Mark Inactive" : "Mark Active"}
+                      </button>
+                    )}
+                  </div>
+
                   <EditableField
                     label="Age"
                     value={student.age}
                     type="number"
                     onSave={(value) => handleUpdate("age", Number(value))}
+                    readOnly={readOnly}
                   />
 
                   <EditableField
                     label="Category"
                     value={student.category}
                     onSave={(value) => handleUpdate("category", value)}
+                    readOnly={readOnly}
                   />
 
                   <EditableField
                     label="School"
                     value={student.school || ""}
                     onSave={(value) => handleUpdate("school", value)}
+                    readOnly={readOnly}
                   />
 
                   <EditableField
                     label="Parent Phone Number"
                     value={student.parentPhoneNumber || ""}
                     onSave={(value) => handleUpdate("parentPhoneNumber", value)}
+                    readOnly={readOnly}
                   />
 
                   <EditableField
                     label="Parent Email"
                     value={student.parentEmail || ""}
+                    readOnly={readOnly}
                     type="email"
                     onSave={(value) => handleUpdate("parentEmail", value)}
                   />
@@ -339,12 +391,14 @@ function StudentProfile({ id, token, onBack, embed = false }) {
                   <div className="info-item attendance-section">
                     <div className="attendance-header">
                       <b>Attendance:</b> {student.attendance}
-                      <button
-                        onClick={handleMarkPresent}
-                        className="action-button success"
-                      >
-                        Mark Present
-                      </button>
+                      {!readOnly && (
+                        <button
+                          onClick={handleMarkPresent}
+                          className="action-button success"
+                        >
+                          Mark Present
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -356,6 +410,7 @@ function StudentProfile({ id, token, onBack, embed = false }) {
                       onSave={(value) =>
                         handleUpdate("amountDue", Number(value))
                       }
+                      readOnly={readOnly}
                     />
                     <EditableField
                       label="Amount Paid"
@@ -364,12 +419,14 @@ function StudentProfile({ id, token, onBack, embed = false }) {
                       onSave={(value) =>
                         handleUpdate("amountPaid", Number(value))
                       }
+                      readOnly={readOnly}
                     />
                     <EditableField
                       label="Due Reset Date"
                       value={student.dueResetDate}
                       type="date"
                       onSave={(value) => handleUpdate("dueResetDate", value)}
+                      readOnly={readOnly}
                     />
                   </div>
                 </div>

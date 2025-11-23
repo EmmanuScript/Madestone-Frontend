@@ -71,26 +71,36 @@ export default function AllStudents({ token }) {
 
     // if an image file was selected, upload it
     if (form.file) {
-      try {
-        const fd = new FormData();
-        fd.append("file", form.file, form.file.name);
-
-        const upl = await fetch(
-          `http://localhost:5000/upload/student/${created.id}/image`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: "Bearer " + token,
-            },
-            body: fd,
-          }
+      // Validate file size (200KB max)
+      const maxFileSize = 200 * 1024; // 200KB
+      if (form.file.size > maxFileSize) {
+        console.warn(
+          `Image file too large (${(form.file.size / 1024).toFixed(
+            2
+          )}KB). Maximum is 200KB`
         );
+      } else {
+        try {
+          const fd = new FormData();
+          fd.append("file", form.file, form.file.name);
 
-        if (!upl.ok) {
-          console.warn("Image upload failed for student", created.id);
+          const upl = await fetch(
+            `http://localhost:5000/upload/student/${created.id}/image`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: "Bearer " + token,
+              },
+              body: fd,
+            }
+          );
+
+          if (!upl.ok) {
+            console.warn("Image upload failed for student", created.id);
+          }
+        } catch (err) {
+          console.warn("Image upload error", err);
         }
-      } catch (err) {
-        console.warn("Image upload error", err);
       }
     }
 

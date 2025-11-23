@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from "react";
+import { useToastContext } from "../components/ToastProvider";
 import Sidebar from "../components/Sidebar";
+import "../styles/ceo-background.css";
+import "../styles/preferences.css";
 
-export default function CEO({ token, onLogout, onCoachClick, onStudentClick }) {
-  const [view, setView] = useState("overview"); // overview | students | coaches | centers
+export default function CEO({
+  token,
+  onLogout,
+  onCoachClick,
+  onStudentClick,
+  onAdminClick,
+}) {
+  const [view, setView] = useState(() => {
+    return localStorage.getItem("ceoView") || "overview";
+  });
   const [centers, setCenters] = useState([]);
   const [coaches, setCoaches] = useState([]);
   const [centerName, setCenterName] = useState("");
@@ -14,6 +25,21 @@ export default function CEO({ token, onLogout, onCoachClick, onStudentClick }) {
     centerId: "",
     birthMonthDay: "",
   });
+
+  // Preferences state
+  const [prefLoading, setPrefLoading] = useState(false);
+  const [sessionFeeInput, setSessionFeeInput] = useState("");
+  const [sessionNameInput, setSessionNameInput] = useState("");
+  const [currentPref, setCurrentPref] = useState({
+    sessionFee: 0,
+    sessionName: "",
+  });
+  const { success, error: showError } = useToastContext();
+
+  // Persist view state to localStorage
+  useEffect(() => {
+    localStorage.setItem("ceoView", view);
+  }, [view]);
 
   useEffect(() => {
     fetchCenters();
@@ -31,6 +57,109 @@ export default function CEO({ token, onLogout, onCoachClick, onStudentClick }) {
       headers: { Authorization: "Bearer " + token },
     });
     setCoaches(await res.json());
+  }
+
+  async function fetchPreference() {
+    try {
+      setPrefLoading(true);
+      const res = await fetch("http://localhost:5000/preferences", {
+        headers: { Authorization: "Bearer " + token },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentPref({
+          sessionFee: data.sessionFee || 0,
+          sessionName: data.sessionName || "",
+        });
+        setSessionFeeInput(String(data.sessionFee || ""));
+        setSessionNameInput(data.sessionName || "");
+      }
+    } catch (e) {
+      // ignore
+    } finally {
+      setPrefLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (view === "preferences") {
+      fetchPreference();
+    }
+  }, [view]);
+
+  async function updateSessionFee() {
+    const fee = Number(sessionFeeInput);
+    if (isNaN(fee) || fee < 0) {
+      showError("Enter a valid non-negative fee");
+      return;
+    }
+    try {
+      const res = await fetch("http://localhost:5000/preferences/session-fee", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({ sessionFee: fee }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setCurrentPref({
+        sessionFee: data.sessionFee,
+        sessionName: data.sessionName,
+      });
+      success("Session fee updated and applied to all students");
+    } catch (e) {
+      showError("Failed to update session fee");
+    }
+  }
+
+  async function updateSessionName() {
+    const name = sessionNameInput.trim();
+    try {
+      const res = await fetch(
+        "http://localhost:5000/preferences/session-name",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token,
+          },
+          body: JSON.stringify({ sessionName: name }),
+        }
+      );
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setCurrentPref({
+        sessionFee: data.sessionFee,
+        sessionName: data.sessionName,
+      });
+      success("Session name saved");
+    } catch (e) {
+      showError("Failed to update session name");
+    }
+  }
+
+  async function resetSession() {
+    if (
+      !window.confirm(
+        "Reset session? This will zero payments and set due to session fee."
+      )
+    )
+      return;
+    try {
+      const res = await fetch(
+        "http://localhost:5000/preferences/reset-session",
+        {
+          method: "POST",
+          headers: { Authorization: "Bearer " + token },
+        }
+      );
+      if (!res.ok) throw new Error();
+      success("Session reset: all payments cleared and dues set");
+    } catch (e) {
+      showError("Failed to reset session");
+    }
   }
 
   async function addCenter() {
@@ -79,9 +208,21 @@ export default function CEO({ token, onLogout, onCoachClick, onStudentClick }) {
 
   return (
     <div
-      className="page admin-page"
-      style={{ display: "flex", gap: 16, alignItems: "flex-start" }}
+      className="page admin-page ceo-page-wrapper"
+      style={{
+        display: "flex",
+        gap: 16,
+        alignItems: "flex-start",
+        position: "relative",
+      }}
     >
+      {/* Logo at top right */}
+      <img
+        src="https://res.cloudinary.com/dysavifkn/image/upload/v1762470525/YyUeno01_gahjvf.svg"
+        alt="Logo"
+        className="ceo-logo"
+      />
+
       <aside style={{ minWidth: 200 }}>
         <Sidebar view={view} setView={setView} onLogout={onLogout} />
       </aside>
@@ -115,8 +256,11 @@ export default function CEO({ token, onLogout, onCoachClick, onStudentClick }) {
               </ul>
 
               <h3>Coaches</h3>
-              <button onClick={() => setShowCoachForm((v) => !v)}>
-                {showCoachForm ? "Cancel" : "Add Coach"}
+              <button
+                onClick={() => setShowCoachForm((v) => !v)}
+                className={showCoachForm ? "btn-secondary" : ""}
+              >
+                {showCoachForm ? "❌ Cancel" : "➕ Add Coach"}
               </button>
               {showCoachForm && (
                 <form onSubmit={createCoach} style={{ margin: "12px 0" }}>
@@ -209,6 +353,14 @@ export default function CEO({ token, onLogout, onCoachClick, onStudentClick }) {
             </div>
           )}
 
+          {view === "admins" && (
+            <div>
+              <React.Suspense fallback={<div>Loading...</div>}>
+                <AdminsAdmin token={token} />
+              </React.Suspense>
+            </div>
+          )}
+
           {view === "centers" && (
             <div>
               <React.Suspense fallback={<div>Loading...</div>}>
@@ -216,6 +368,7 @@ export default function CEO({ token, onLogout, onCoachClick, onStudentClick }) {
                   token={token}
                   onStudentClick={onStudentClick}
                   onCoachClick={onCoachClick}
+                  onAdminClick={onAdminClick}
                 />
               </React.Suspense>
             </div>
@@ -231,6 +384,208 @@ export default function CEO({ token, onLogout, onCoachClick, onStudentClick }) {
               </React.Suspense>
             </div>
           )}
+
+          {view === "mark-attendance" && (
+            <div>
+              <React.Suspense fallback={<div>Loading...</div>}>
+                <MarkAttendance
+                  token={token}
+                  userId={localStorage.getItem("userId")}
+                  onStudentClick={onStudentClick}
+                />
+              </React.Suspense>
+            </div>
+          )}
+
+          {view === "coach-attendance" && (
+            <div>
+              <React.Suspense fallback={<div>Loading...</div>}>
+                <MarkCoachAttendance
+                  token={token}
+                  userId={localStorage.getItem("userId")}
+                  onCoachClick={onCoachClick}
+                />
+              </React.Suspense>
+            </div>
+          )}
+
+          {view === "coach-attendance-history" && (
+            <div>
+              <React.Suspense fallback={<div>Loading...</div>}>
+                <CoachAttendanceHistory
+                  token={token}
+                  onCoachClick={onCoachClick}
+                />
+              </React.Suspense>
+            </div>
+          )}
+
+          {view === "preferences" && (
+            <div>
+              <h2>System Preferences</h2>
+              {prefLoading && (
+                <div className="loading-container">
+                  <div className="loading-spinner"></div>
+                  <p className="loading-text">Loading preferences...</p>
+                </div>
+              )}
+              {!prefLoading && (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                    gap: "20px",
+                    marginTop: "24px",
+                  }}
+                >
+                  <div className="preference-card">
+                    <div
+                      className="preference-icon"
+                      style={{
+                        background: "linear-gradient(135deg, #4caf50, #66bb6a)",
+                      }}
+                    >
+                      ₦
+                    </div>
+                    <h3 style={{ marginTop: 16, marginBottom: 8 }}>
+                      Session Fee
+                    </h3>
+                    <div className="preference-current">
+                      Current:{" "}
+                      <span
+                        style={{
+                          color: "var(--lime)",
+                          fontWeight: 700,
+                          fontSize: 18,
+                        }}
+                      >
+                        ₦{currentPref.sessionFee.toLocaleString()}
+                      </span>
+                    </div>
+                    <p
+                      style={{
+                        fontSize: 13,
+                        color: "rgba(255,255,255,0.6)",
+                        margin: "8px 0 16px",
+                      }}
+                    >
+                      Setting a new fee will update the amount due for all
+                      students
+                    </p>
+                    <input
+                      type="number"
+                      min="0"
+                      value={sessionFeeInput}
+                      onChange={(e) => setSessionFeeInput(e.target.value)}
+                      placeholder="Enter new session fee"
+                    />
+                    <button
+                      onClick={updateSessionFee}
+                      style={{ width: "100%", marginTop: 12 }}
+                    >
+                      💰 Update Session Fee
+                    </button>
+                  </div>
+
+                  <div className="preference-card">
+                    <div
+                      className="preference-icon"
+                      style={{
+                        background: "linear-gradient(135deg, #2196f3, #42a5f5)",
+                      }}
+                    >
+                      📝
+                    </div>
+                    <h3 style={{ marginTop: 16, marginBottom: 8 }}>
+                      Session Name
+                    </h3>
+                    <div className="preference-current">
+                      Current:{" "}
+                      <span
+                        style={{
+                          color: "var(--lime)",
+                          fontWeight: 700,
+                          fontSize: 16,
+                        }}
+                      >
+                        {currentPref.sessionName || "(not set)"}
+                      </span>
+                    </div>
+                    <p
+                      style={{
+                        fontSize: 13,
+                        color: "rgba(255,255,255,0.6)",
+                        margin: "8px 0 16px",
+                      }}
+                    >
+                      Give your current session a memorable name
+                    </p>
+                    <input
+                      value={sessionNameInput}
+                      onChange={(e) => setSessionNameInput(e.target.value)}
+                      placeholder="e.g., Spring 2025, Term 1"
+                    />
+                    <button
+                      onClick={updateSessionName}
+                      style={{ width: "100%", marginTop: 12 }}
+                    >
+                      ✏️ Save Session Name
+                    </button>
+                  </div>
+
+                  <div className="preference-card preference-card-danger">
+                    <div
+                      className="preference-icon"
+                      style={{
+                        background: "linear-gradient(135deg, #ff4757, #ff6b6b)",
+                      }}
+                    >
+                      ⚠️
+                    </div>
+                    <h3 style={{ marginTop: 16, marginBottom: 8 }}>
+                      Reset Session
+                    </h3>
+                    <p
+                      style={{
+                        fontSize: 14,
+                        color: "rgba(255,255,255,0.8)",
+                        margin: "12px 0 16px",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      This will reset all students:
+                    </p>
+                    <ul
+                      style={{
+                        textAlign: "left",
+                        fontSize: 13,
+                        color: "rgba(255,255,255,0.7)",
+                        marginBottom: 20,
+                        paddingLeft: 24,
+                      }}
+                    >
+                      <li>
+                        Amount Paid → <strong>₦0</strong>
+                      </li>
+                      <li>
+                        Amount Due →{" "}
+                        <strong>
+                          ₦{currentPref.sessionFee.toLocaleString()}
+                        </strong>
+                      </li>
+                    </ul>
+                    <button
+                      className="btn-danger"
+                      onClick={resetSession}
+                      style={{ width: "100%", marginTop: "auto" }}
+                    >
+                      🔄 Reset All Students
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -240,5 +595,13 @@ export default function CEO({ token, onLogout, onCoachClick, onStudentClick }) {
 // lazy load admin pages
 const AllStudents = React.lazy(() => import("./AllStudents"));
 const CoachesAdmin = React.lazy(() => import("./CoachesAdmin"));
+const AdminsAdmin = React.lazy(() => import("./AdminsAdmin"));
 const CentersAdmin = React.lazy(() => import("./CentersAdmin"));
 const AttendanceHistory = React.lazy(() => import("./AttendanceHistory"));
+const MarkAttendance = React.lazy(() => import("../components/MarkAttendance"));
+const MarkCoachAttendance = React.lazy(() =>
+  import("../components/MarkCoachAttendance")
+);
+const CoachAttendanceHistory = React.lazy(() =>
+  import("./CoachAttendanceHistory")
+);

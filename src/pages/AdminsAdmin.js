@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import CoachProfile from "./CoachProfile";
-import SearchableList from "../components/SearchableList";
+import AdminProfile from "./AdminProfile";
 import Dialog from "../components/Dialog";
 import Toast from "../components/Toast";
 import { useToast } from "../hooks/useToast";
@@ -8,8 +7,8 @@ import "../components/SearchableList.css";
 import "../components/StudentCard.css";
 import "../components/CoachCard.css";
 
-export default function CoachesAdmin({ token, readOnly = false }) {
-  const [coaches, setCoaches] = useState([]);
+export default function AdminsAdmin({ token }) {
+  const [admins, setAdmins] = useState([]);
   const [centers, setCenters] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -23,17 +22,18 @@ export default function CoachesAdmin({ token, readOnly = false }) {
   const { toasts, success, error, removeToast } = useToast();
 
   useEffect(() => {
-    fetchCoaches();
+    fetchAdmins();
     fetchCenters();
   }, []);
 
-  async function fetchCoaches() {
-    const res = await fetch("http://localhost:5000/users/coaches", {
+  async function fetchAdmins() {
+    const res = await fetch("http://localhost:5000/users/admins", {
       headers: { Authorization: "Bearer " + token },
     });
-    if (!res.ok) return setCoaches([]);
-    setCoaches(await res.json());
+    if (!res.ok) return setAdmins([]);
+    setAdmins(await res.json());
   }
+
   async function fetchCenters() {
     const res = await fetch("http://localhost:5000/centers", {
       headers: { Authorization: "Bearer " + token },
@@ -42,7 +42,7 @@ export default function CoachesAdmin({ token, readOnly = false }) {
     setCenters(await res.json());
   }
 
-  async function createCoach(e) {
+  async function createAdmin(e) {
     e.preventDefault();
     try {
       const response = await fetch("http://localhost:5000/users", {
@@ -55,27 +55,27 @@ export default function CoachesAdmin({ token, readOnly = false }) {
           name: form.name,
           username: form.username,
           password: form.password,
-          role: "COACH",
+          role: "ADMIN",
           center: form.centerId ? { id: Number(form.centerId) } : undefined,
           active: true,
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to create coach");
+      if (!response.ok) throw new Error("Failed to create admin");
 
       setForm({ name: "", username: "", password: "", centerId: "" });
       setShowForm(false);
-      await fetchCoaches();
-      success("Coach created successfully!");
+      await fetchAdmins();
+      success("Admin created successfully!");
     } catch (err) {
-      error("Failed to create coach. Please try again.");
+      error("Failed to create admin. Please try again.");
     }
   }
 
   if (selected)
     return (
       <div>
-        <CoachProfile
+        <AdminProfile
           id={selected}
           token={token}
           onBack={() => setSelected(null)}
@@ -84,87 +84,37 @@ export default function CoachesAdmin({ token, readOnly = false }) {
       </div>
     );
 
-  const handleToggleActive = async (coach) => {
+  const handleToggleActive = async (admin) => {
     setDialog({
       isOpen: true,
       type: "confirm",
-      data: coach,
-      title: `${coach.active ? "Deactivate" : "Activate"} Coach`,
+      data: admin,
+      title: `${admin.active ? "Deactivate" : "Activate"} Admin`,
       message: `Are you sure you want to ${
-        coach.active ? "deactivate" : "activate"
-      } ${coach.name}?`,
+        admin.active ? "deactivate" : "activate"
+      } ${admin.name}?`,
       onConfirm: async () => {
-        await fetch(`http://localhost:5000/users/${coach.id}/active`, {
+        await fetch(`http://localhost:5000/users/${admin.id}/active`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ active: !coach.active }),
+          body: JSON.stringify({ active: !admin.active }),
         });
-        fetchCoaches();
+        fetchAdmins();
       },
     });
   };
 
-  const renderCoach = (coach) => (
-    <div key={coach.id} className="student-card coach-card clickable">
-      <div className="profile-header">
-        <div className="profile-avatar small">
-          {coach.image ? (
-            <img
-              src={`http://localhost:5000/uploads/${coach.image}`}
-              alt={coach.name}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                borderRadius: "50%",
-              }}
-            />
-          ) : (
-            coach.name.charAt(0)
-          )}
-        </div>
-        <h3>{coach.name}</h3>
-        <div className={`status-badge ${coach.active ? "active" : "inactive"}`}>
-          {coach.active ? "Active" : "Inactive"}
-        </div>
-      </div>
-      <div className="profile-info">
-        <span>Username: {coach.username}</span>
-        <span>Center: {coach.center?.name || "-"}</span>
-      </div>
-      <div className="card-actions">
-        <button onClick={() => setSelected(coach.id)} className="action-button">
-          View Profile
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleToggleActive(coach);
-          }}
-          className={`action-button ${coach.active ? "danger" : "success"}`}
-        >
-          {coach.active ? "Deactivate" : "Activate"}
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <div>
-      <h2>Coaches</h2>
-      {!readOnly && (
-        <button
-          onClick={() => setShowForm((s) => !s)}
-          className="action-button"
-        >
-          {showForm ? "Cancel" : "Add Coach"}
-        </button>
-      )}
-      {showForm && !readOnly && (
-        <form onSubmit={createCoach} className="add-form">
+      <h2>Admins</h2>
+      <button onClick={() => setShowForm((s) => !s)} className="action-button">
+        {showForm ? "Cancel" : "Add Admin"}
+      </button>
+      {showForm && (
+        <form onSubmit={createAdmin} className="add-form">
           <input
             required
             placeholder="Name"
@@ -205,27 +155,43 @@ export default function CoachesAdmin({ token, readOnly = false }) {
         </form>
       )}
 
-      <div className="coaches-list-vertical">
-        {coaches.map((co) => (
-          <div key={co.id} className="coach-box card-vertical">
+      <div className="admins-list-vertical">
+        {admins.map((admin) => (
+          <div key={admin.id} className="admin-box card-vertical">
             <div className="coach-left">
-              <div className="coach-avatar">{co.name.charAt(0)}</div>
+              <div className="coach-avatar">{admin.name.charAt(0)}</div>
               <div>
-                <strong>{co.name}</strong>
-                <div className="muted">
-                  Center: {co.center?.name || "No center"}
-                </div>
-                {co.birthMonthDay && (
-                  <div className="muted">DOB: {co.birthMonthDay}</div>
-                )}
+                <strong>{admin.name}</strong>
+                <div className="muted">{admin.center?.name || "No center"}</div>
               </div>
             </div>
             <div className="coach-right">
-              <button onClick={() => setSelected(co.id)}>View</button>
+              <button onClick={() => setSelected(admin.id)}>View</button>
             </div>
           </div>
         ))}
       </div>
+
+      {dialog.isOpen && (
+        <Dialog
+          title={dialog.title}
+          message={dialog.message}
+          onConfirm={() => {
+            dialog.onConfirm();
+            setDialog({ isOpen: false, type: "", data: null });
+          }}
+          onCancel={() => setDialog({ isOpen: false, type: "", data: null })}
+        />
+      )}
+
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }

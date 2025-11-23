@@ -3,8 +3,10 @@ import { ToastProvider } from "./components/ToastProvider";
 import Login from "./pages/Login";
 import CEO from "./pages/CEO";
 import Coach from "./pages/Coach";
+import Admin from "./pages/Admin";
 import CoachProfile from "./pages/CoachProfile";
 import StudentProfile from "./pages/StudentProfile";
+import AdminProfile from "./pages/AdminProfile";
 
 const CoachCenterStudents = React.lazy(() => import("./pages/CenterStudents"));
 
@@ -15,6 +17,7 @@ export default function App() {
   const [showCenterStudents, setShowCenterStudents] = useState(false);
   const [coachProfileId, setCoachProfileId] = useState(null);
   const [studentProfileId, setStudentProfileId] = useState(null);
+  const [adminProfileId, setAdminProfileId] = useState(null);
 
   // Restore role and userId from token if needed
   useEffect(() => {
@@ -50,6 +53,7 @@ export default function App() {
     setRole(null);
     setCoachProfileId(null);
     setStudentProfileId(null);
+    setAdminProfileId(null);
     setUserId(null);
   }
 
@@ -71,6 +75,7 @@ export default function App() {
           id={coachProfileId}
           token={token}
           onBack={() => setCoachProfileId(null)}
+          readOnly={role === "COACH"}
         />
       );
 
@@ -80,6 +85,17 @@ export default function App() {
           id={studentProfileId}
           token={token}
           onBack={() => setStudentProfileId(null)}
+          readOnly={role === "COACH"}
+        />
+      );
+
+    if (adminProfileId)
+      return (
+        <AdminProfile
+          id={adminProfileId}
+          token={token}
+          onBack={() => setAdminProfileId(null)}
+          embed={false}
         />
       );
 
@@ -101,6 +117,19 @@ export default function App() {
           onLogout={logout}
           onCoachClick={setCoachProfileId}
           onStudentClick={setStudentProfileId}
+          onAdminClick={setAdminProfileId}
+        />
+      );
+
+    if (role === "ADMIN")
+      return (
+        <Admin
+          token={token}
+          onLogout={logout}
+          onCoachClick={setCoachProfileId}
+          onStudentClick={setStudentProfileId}
+          onAdminClick={setAdminProfileId}
+          userId={userId}
         />
       );
 
@@ -109,6 +138,7 @@ export default function App() {
         token={token}
         onLogout={logout}
         onStudentClick={setStudentProfileId}
+        onCoachClick={setCoachProfileId}
         userId={userId}
         onShowCenterStudents={() => setShowCenterStudents(true)}
       />

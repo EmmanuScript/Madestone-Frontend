@@ -12,13 +12,16 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 20px;
-  border-radius: 6px;
+  padding: 16px 24px;
+  border-radius: 12px;
   color: white;
-  min-width: 300px;
-  max-width: 400px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: slideInRight 0.3s ease, slideOutRight 0.3s ease forwards 2.7s;
+  min-width: 320px;
+  max-width: 420px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    slideOutRight 0.3s ease forwards 2.7s;
 }
 
 .toast-icon {

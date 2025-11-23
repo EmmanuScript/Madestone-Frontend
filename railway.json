@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/railway.json",
+  "build": {
+    "builder": "nixpacks"
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "restartPolicyType": "always",
+    "restartPolicyMaxRetries": 5
+  }
+}

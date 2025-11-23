@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import "./EditableField.css";
 
-export default function EditableField({ label, value, onSave, type = "text" }) {
+export default function EditableField({
+  label,
+  value,
+  onSave,
+  type = "text",
+  readOnly = false,
+}) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
 
@@ -15,11 +21,14 @@ export default function EditableField({ label, value, onSave, type = "text" }) {
     setIsEditing(false);
   };
 
-  if (!isEditing) {
+  if (!isEditing || readOnly) {
     return (
-      <div className="editable-field" onClick={() => setIsEditing(true)}>
+      <div
+        className={`editable-field ${readOnly ? "read-only" : ""}`}
+        onClick={readOnly ? undefined : () => setIsEditing(true)}
+      >
         <b>{label}:</b> {value || "-"}
-        <button className="edit-button">Edit</button>
+        {!readOnly && <button className="edit-button">Edit</button>}
       </div>
     );
   }

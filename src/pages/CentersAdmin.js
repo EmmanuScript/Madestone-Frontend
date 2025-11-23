@@ -1,11 +1,18 @@
 import React, { useEffect, useState } from "react";
 
-export default function CentersAdmin({ token, onStudentClick, onCoachClick }) {
+export default function CentersAdmin({
+  token,
+  onStudentClick,
+  onCoachClick,
+  onAdminClick,
+  readOnly = false,
+}) {
   const [centers, setCenters] = useState([]);
   const [name, setName] = useState("");
   const [selected, setSelected] = useState(null);
   const [students, setStudents] = useState([]);
   const [coaches, setCoaches] = useState([]);
+  const [admins, setAdmins] = useState([]);
 
   useEffect(() => {
     fetchCenters();
@@ -44,6 +51,12 @@ export default function CentersAdmin({ token, onStudentClick, onCoachClick }) {
     });
     const allcoaches = cres.ok ? await cres.json() : [];
     setCoaches(allcoaches.filter((c) => c.center && c.center.id === id));
+
+    const ares = await fetch(`http://localhost:5000/users/admins`, {
+      headers: { Authorization: "Bearer " + token },
+    });
+    const alladmins = ares.ok ? await ares.json() : [];
+    setAdmins(alladmins.filter((a) => a.center && a.center.id === id));
   }
 
   if (selected)
@@ -97,21 +110,48 @@ export default function CentersAdmin({ token, onStudentClick, onCoachClick }) {
             </li>
           ))}
         </ul>
+        <div>
+          <b>Admins</b>
+        </div>
+        <ul>
+          {admins.map((a) => (
+            <li key={a.id}>
+              <button
+                onClick={() => onAdminClick && onAdminClick(a.id)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  margin: 0,
+                  color: "#2a7",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                }}
+              >
+                {a.name}
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
     );
 
   return (
     <div>
       <h2>Centers</h2>
-      <input
-        placeholder="New center name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <button onClick={createCenter}>Create Center</button>
-      <div className="list-grid">
+      {!readOnly && (
+        <>
+          <input
+            placeholder="New center name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <button onClick={createCenter}>Create Center</button>
+        </>
+      )}
+      <div className="centers-list-vertical">
         {centers.map((c) => (
-          <div key={c.id} className="center-box card-small">
+          <div key={c.id} className="center-box card-vertical">
             <div>
               <strong>{c.name}</strong>
               <div className="muted">{c.address}</div>
