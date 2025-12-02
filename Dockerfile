@@ -25,11 +25,14 @@ FROM nginx:alpine
 # Copy built files from build stage
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy custom nginx template
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-# Expose port 8080 for Railway
-EXPOSE 8080
+# Railway sets PORT env variable, default to 8080
+ENV PORT=8080
 
-# Start nginx on port 8080
-CMD ["sh", "-c", "sed -i 's/listen 80;/listen 8080;/g' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# Expose the port
+EXPOSE $PORT
+
+# Start nginx with envsubst to replace PORT variable
+CMD sh -c "envsubst '\$PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
