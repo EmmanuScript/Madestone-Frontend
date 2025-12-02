@@ -144,17 +144,14 @@ export default function CEO({
   async function updateSessionName() {
     const name = sessionNameInput.trim();
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/preferences/session-name`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + token,
-          },
-          body: JSON.stringify({ sessionName: name }),
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/preferences/session-name`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({ sessionName: name }),
+      });
       if (!res.ok) throw new Error();
       const data = await res.json();
       setCurrentPref({
@@ -175,13 +172,10 @@ export default function CEO({
     )
       return;
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/preferences/reset-session`,
-        {
-          method: "POST",
-          headers: { Authorization: "Bearer " + token },
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/preferences/reset-session`, {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token },
+      });
       if (!res.ok) throw new Error();
       success("Session reset: all payments cleared and dues set");
     } catch (e) {

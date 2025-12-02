@@ -98,12 +98,9 @@ export default function Coach({
 
   async function fetchStudents() {
     if (!centerId) return setStudents([]);
-      const res = await fetch(
-        `${API_BASE_URL}/centers/${centerId}/students`,
-      {
-        headers: { Authorization: "Bearer " + token },
-      }
-    );
+    const res = await fetch(`${API_BASE_URL}/centers/${centerId}/students`, {
+      headers: { Authorization: "Bearer " + token },
+    });
     if (!res.ok) return setStudents([]);
     const all = await res.json();
     // Filter out inactive students
@@ -175,8 +172,8 @@ export default function Coach({
     }
     setPaymentSubmitting(true);
     try {
-        const res = await fetch(
-          `${API_BASE_URL}/students/${paymentStudent.id}/payment`,
+      const res = await fetch(
+        `${API_BASE_URL}/students/${paymentStudent.id}/payment`,
         {
           method: "PATCH",
           headers: {

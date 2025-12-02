@@ -30,12 +30,9 @@ export default function CenterStudents({ token, userId, onBack }) {
       setCenterName(user.center?.name || "");
       if (!cid) return setStudents([]);
 
-      const sres = await fetch(
-        `${API_BASE_URL}/centers/${cid}/students`,
-        {
-          headers: { Authorization: "Bearer " + token },
-        }
-      );
+      const sres = await fetch(`${API_BASE_URL}/centers/${cid}/students`, {
+        headers: { Authorization: "Bearer " + token },
+      });
       if (!sres.ok) return setStudents([]);
       const all = await sres.json();
       setStudents(all);

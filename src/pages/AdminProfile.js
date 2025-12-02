@@ -98,16 +98,13 @@ function AdminProfile({ id, token, onBack, embed = false }) {
       const fd = new FormData();
       fd.append("file", file, file.name);
 
-      const response = await fetch(
-        `${API_BASE_URL}/upload/user/${id}/image`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: fd,
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/upload/user/${id}/image`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: fd,
+      });
 
       if (!response.ok) throw new Error("Failed to upload image");
 
@@ -133,15 +130,12 @@ function AdminProfile({ id, token, onBack, embed = false }) {
     }
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/upload/user/${id}/image`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/upload/user/${id}/image`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) throw new Error("Failed to delete image");
 
@@ -193,7 +187,9 @@ function AdminProfile({ id, token, onBack, embed = false }) {
               <div className="profile-avatar">
                 {admin.imageViewUrl ||
                 admin.imageUrl ||
-                (admin.image ? `${API_BASE_URL}/uploads/${admin.image}` : null) ? (
+                (admin.image
+                  ? `${API_BASE_URL}/uploads/${admin.image}`
+                  : null) ? (
                   <img
                     src={
                       admin.imageViewUrl ||
@@ -457,13 +453,10 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                       )
                         return;
                       try {
-                        const res = await fetch(
-                          `${API_BASE_URL}/users/${id}`,
-                          {
-                            method: "DELETE",
-                            headers: { Authorization: `Bearer ${token}` },
-                          }
-                        );
+                        const res = await fetch(`${API_BASE_URL}/users/${id}`, {
+                          method: "DELETE",
+                          headers: { Authorization: `Bearer ${token}` },
+                        });
                         if (!res.ok) throw new Error("Delete failed");
                         success("Admin account deleted");
                         onBack();
