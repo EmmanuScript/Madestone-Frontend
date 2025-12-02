@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 import { useToastContext } from "./ToastProvider";
 import "./Dialog.css";
 
@@ -38,7 +39,7 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
         }
       }
       if (uid) {
-        const ures = await fetch(`http://localhost:5000/users/${uid}`, {
+        const ures = await fetch(`${API_BASE_URL}/users/${uid}`, {
           headers: { Authorization: "Bearer " + token },
         });
         if (ures.ok) {
@@ -66,7 +67,7 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
 
   async function fetchAllCenters() {
     try {
-      const res = await fetch("http://localhost:5000/centers", {
+      const res = await fetch(`${API_BASE_URL}/centers`, {
         headers: { Authorization: "Bearer " + token },
       });
       if (res.ok) {
@@ -83,7 +84,7 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
   }
 
   async function fetchStudentsForCenter(cid) {
-    const res = await fetch(`http://localhost:5000/centers/${cid}/students`, {
+    const res = await fetch(`${API_BASE_URL}/centers/${cid}/students`, {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setStudents([]);
@@ -111,7 +112,7 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
     try {
       const promises = Object.entries(attendanceStatus).map(
         ([studentId, present]) => {
-          return fetch("http://localhost:5000/attendance/mark", {
+          return fetch(`${API_BASE_URL}/attendance/mark`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -155,7 +156,7 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
     setPaymentSubmitting(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/students/${paymentStudent.id}/payment`,
+        `${API_BASE_URL}/students/${paymentStudent.id}/payment`,
         {
           method: "PATCH",
           headers: {

@@ -3,6 +3,7 @@ import StudentProfile from "./StudentProfile";
 import SearchableList from "../components/SearchableList";
 import "../components/SearchableList.css";
 import "../components/StudentCard.css";
+import { API_BASE_URL } from "../config/api";
 
 export default function AllStudents({ token }) {
   const [students, setStudents] = useState([]);
@@ -26,7 +27,7 @@ export default function AllStudents({ token }) {
   }, []);
 
   async function fetchStudents() {
-    const res = await fetch("http://localhost:5000/students", {
+    const res = await fetch(`${API_BASE_URL}/students`, {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setStudents([]);
@@ -34,7 +35,7 @@ export default function AllStudents({ token }) {
   }
 
   async function fetchCenters() {
-    const res = await fetch("http://localhost:5000/centers", {
+    const res = await fetch(`${API_BASE_URL}/centers`, {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setCenters([]);
@@ -45,7 +46,7 @@ export default function AllStudents({ token }) {
     e.preventDefault();
 
     // create base student
-    const res = await fetch("http://localhost:5000/students", {
+    const res = await fetch(`${API_BASE_URL}/students`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -85,7 +86,7 @@ export default function AllStudents({ token }) {
           fd.append("file", form.file, form.file.name);
 
           const upl = await fetch(
-            `http://localhost:5000/upload/student/${created.id}/image`,
+            `${API_BASE_URL}/upload/student/${created.id}/image`,
             {
               method: "POST",
               headers: {
@@ -142,13 +143,13 @@ export default function AllStudents({ token }) {
           {student.imageViewUrl ||
           student.imageUrl ||
           (student.image
-            ? `http://localhost:5000/uploads/${student.image}`
+            ? `${API_BASE_URL}/uploads/${student.image}`
             : null) ? (
             <img
               src={
                 student.imageViewUrl ||
                 student.imageUrl ||
-                `http://localhost:5000/uploads/${student.image}`
+                `${API_BASE_URL}/uploads/${student.image}`
               }
               alt={student.name}
               style={{

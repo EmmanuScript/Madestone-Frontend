@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 import { useToastContext } from "../components/ToastProvider";
 import Sidebar from "../components/Sidebar";
 import "../styles/ceo-background.css";
@@ -34,6 +35,13 @@ export default function CEO({
     sessionFee: 0,
     sessionName: "",
   });
+
+  // Password change state
+  const [allUsers, setAllUsers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
   const { success, error: showError } = useToastContext();
 
   // Persist view state to localStorage
@@ -47,13 +55,13 @@ export default function CEO({
   }, []);
 
   async function fetchCenters() {
-    const res = await fetch("http://localhost:5000/centers", {
+    const res = await fetch(`${API_BASE_URL}/centers`, {
       headers: { Authorization: "Bearer " + token },
     });
     setCenters(await res.json());
   }
   async function fetchCoaches() {
-    const res = await fetch("http://localhost:5000/users/coaches", {
+    const res = await fetch(`${API_BASE_URL}/users/coaches`, {
       headers: { Authorization: "Bearer " + token },
     });
     setCoaches(await res.json());
@@ -62,7 +70,7 @@ export default function CEO({
   async function fetchPreference() {
     try {
       setPrefLoading(true);
-      const res = await fetch("http://localhost:5000/preferences", {
+      const res = await fetch(`${API_BASE_URL}/preferences`, {
         headers: { Authorization: "Bearer " + token },
       });
       if (res.ok) {
@@ -84,8 +92,27 @@ export default function CEO({
   useEffect(() => {
     if (view === "preferences") {
       fetchPreference();
+      fetchAllUsers();
     }
   }, [view]);
+
+  async function fetchAllUsers() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/users`, {
+        headers: { Authorization: "Bearer " + token },
+      });
+      if (res.ok) {
+        const users = await res.json();
+        // Filter to only show coaches and admins
+        const filteredUsers = users.filter(
+          (u) => u.role === "COACH" || u.role === "ADMIN"
+        );
+        setAllUsers(filteredUsers);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
 
   async function updateSessionFee() {
     const fee = Number(sessionFeeInput);
@@ -94,7 +121,7 @@ export default function CEO({
       return;
     }
     try {
-      const res = await fetch("http://localhost:5000/preferences/session-fee", {
+      const res = await fetch(`${API_BASE_URL}/preferences/session-fee`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -118,7 +145,7 @@ export default function CEO({
     const name = sessionNameInput.trim();
     try {
       const res = await fetch(
-        "http://localhost:5000/preferences/session-name",
+        `${API_BASE_URL}/preferences/session-name`,
         {
           method: "PATCH",
           headers: {
@@ -149,7 +176,7 @@ export default function CEO({
       return;
     try {
       const res = await fetch(
-        "http://localhost:5000/preferences/reset-session",
+        `${API_BASE_URL}/preferences/reset-session`,
         {
           method: "POST",
           headers: { Authorization: "Bearer " + token },
@@ -162,8 +189,50 @@ export default function CEO({
     }
   }
 
+  async function changeUserPassword() {
+    if (!selectedUserId) {
+      showError("Please select a user");
+      return;
+    }
+    if (!newPassword || newPassword.length < 4) {
+      showError("Password must be at least 4 characters");
+      return;
+    }
+
+    const selectedUser = allUsers.find((u) => u.id === Number(selectedUserId));
+    const confirmMsg = `Change password for ${selectedUser?.name} (${selectedUser?.username})?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      setPasswordLoading(true);
+      const res = await fetch(
+        `${API_BASE_URL}/users/${selectedUserId}/change-password`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token,
+          },
+          body: JSON.stringify({ newPassword }),
+        }
+      );
+      if (res.ok) {
+        success(`Password changed for ${selectedUser?.name}`);
+        setSelectedUserId("");
+        setNewPassword("");
+      } else {
+        const errData = await res.json();
+        showError(errData.message || "Failed to change password");
+      }
+    } catch (e) {
+      showError("Error: " + e.message);
+    } finally {
+      setPasswordLoading(false);
+    }
+  }
+
   async function addCenter() {
-    await fetch("http://localhost:5000/centers", {
+    await fetch(`${API_BASE_URL}/centers`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -177,7 +246,7 @@ export default function CEO({
 
   async function createCoach(e) {
     e.preventDefault();
-    await fetch("http://localhost:5000/users", {
+    await fetch(`${API_BASE_URL}/users`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -580,6 +649,59 @@ export default function CEO({
                       style={{ width: "100%", marginTop: "auto" }}
                     >
                       🔄 Reset All Students
+                    </button>
+                  </div>
+
+                  <div className="preference-card">
+                    <div
+                      className="preference-icon"
+                      style={{
+                        background: "linear-gradient(135deg, #9c27b0, #ba68c8)",
+                      }}
+                    >
+                      🔐
+                    </div>
+                    <h3 style={{ marginTop: 16, marginBottom: 8 }}>
+                      Change User Password
+                    </h3>
+                    <p
+                      style={{
+                        fontSize: 13,
+                        color: "rgba(255,255,255,0.6)",
+                        margin: "8px 0 16px",
+                      }}
+                    >
+                      Reset password for coaches or admins who forgot their
+                      credentials
+                    </p>
+                    <select
+                      value={selectedUserId}
+                      onChange={(e) => setSelectedUserId(e.target.value)}
+                      style={{ marginBottom: 12 }}
+                    >
+                      <option value="">Select User</option>
+                      {allUsers.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name} ({u.role}) - {u.username}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                      disabled={!selectedUserId}
+                      style={{ marginBottom: 12 }}
+                    />
+                    <button
+                      onClick={changeUserPassword}
+                      disabled={
+                        !selectedUserId || !newPassword || passwordLoading
+                      }
+                      style={{ width: "100%", marginTop: 0 }}
+                    >
+                      {passwordLoading ? "Changing..." : "🔑 Change Password"}
                     </button>
                   </div>
                 </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 
 export default function CenterStudents({ token, userId, onBack }) {
   const [students, setStudents] = useState([]);
@@ -20,7 +21,7 @@ export default function CenterStudents({ token, userId, onBack }) {
     }
     if (!uid) return;
     try {
-      const ures = await fetch(`http://localhost:5000/users/${uid}`, {
+      const ures = await fetch(`${API_BASE_URL}/users/${uid}`, {
         headers: { Authorization: "Bearer " + token },
       });
       if (!ures.ok) throw new Error("Failed to load user");
@@ -30,7 +31,7 @@ export default function CenterStudents({ token, userId, onBack }) {
       if (!cid) return setStudents([]);
 
       const sres = await fetch(
-        `http://localhost:5000/centers/${cid}/students`,
+        `${API_BASE_URL}/centers/${cid}/students`,
         {
           headers: { Authorization: "Bearer " + token },
         }

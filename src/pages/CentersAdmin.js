@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 
 export default function CentersAdmin({
   token,
@@ -19,7 +20,7 @@ export default function CentersAdmin({
   }, []);
 
   async function fetchCenters() {
-    const res = await fetch("http://localhost:5000/centers", {
+    const res = await fetch(`${API_BASE_URL}/centers`, {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setCenters([]);
@@ -27,7 +28,7 @@ export default function CentersAdmin({
   }
 
   async function createCenter() {
-    await fetch("http://localhost:5000/centers", {
+    await fetch(`${API_BASE_URL}/centers`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -41,18 +42,17 @@ export default function CentersAdmin({
 
   async function openCenter(id) {
     setSelected(id);
-    const sres = await fetch(`http://localhost:5000/centers/${id}/students`, {
+    const sres = await fetch(`${API_BASE_URL}/centers/${id}/students`, {
       headers: { Authorization: "Bearer " + token },
     });
     const studs = sres.ok ? await sres.json() : [];
     setStudents(studs);
-    const cres = await fetch(`http://localhost:5000/users/coaches`, {
+    const cres = await fetch(`${API_BASE_URL}/users/coaches`, {
       headers: { Authorization: "Bearer " + token },
     });
     const allcoaches = cres.ok ? await cres.json() : [];
     setCoaches(allcoaches.filter((c) => c.center && c.center.id === id));
-
-    const ares = await fetch(`http://localhost:5000/users/admins`, {
+    const ares = await fetch(`${API_BASE_URL}/users/admins`, {
       headers: { Authorization: "Bearer " + token },
     });
     const alladmins = ares.ok ? await ares.json() : [];

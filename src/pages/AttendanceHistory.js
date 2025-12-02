@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 
 export default function AttendanceHistory({ token, onStudentClick }) {
   const [centers, setCenters] = useState([]);
@@ -16,14 +17,14 @@ export default function AttendanceHistory({ token, onStudentClick }) {
   }, []);
 
   async function fetchCenters() {
-    const res = await fetch("http://localhost:5000/centers", {
+    const res = await fetch(`${API_BASE_URL}/centers`, {
       headers: { Authorization: "Bearer " + token },
     });
     setCenters(await res.json());
   }
 
   async function fetchStudents() {
-    const res = await fetch("http://localhost:5000/students", {
+    const res = await fetch(`${API_BASE_URL}/students`, {
       headers: { Authorization: "Bearer " + token },
     });
     setStudents(await res.json());
@@ -50,7 +51,7 @@ export default function AttendanceHistory({ token, onStudentClick }) {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/attendance/center/${centerId}?start=${start}&end=${end}`,
+        `${API_BASE_URL}/attendance/center/${centerId}?start=${start}&end=${end}`,
         { headers: { Authorization: "Bearer " + token } }
       );
       if (!res.ok) throw new Error("Failed to fetch attendance");
@@ -70,7 +71,7 @@ export default function AttendanceHistory({ token, onStudentClick }) {
     // allow export for any range
     try {
       const res = await fetch(
-        `http://localhost:5000/attendance/export/center/${centerId}?start=${start}&end=${end}`,
+        `${API_BASE_URL}/attendance/export/center/${centerId}?start=${start}&end=${end}`,
         { headers: { Authorization: "Bearer " + token } }
       );
       if (!res.ok) throw new Error("Export failed");

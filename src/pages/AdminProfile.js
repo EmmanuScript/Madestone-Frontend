@@ -7,6 +7,7 @@ import withPageTransition from "../components/withPageTransition";
 import "../styles/animations.css";
 import "../styles/profile.css";
 import "../styles/embedded-pages.css";
+import { API_BASE_URL } from "../config/api";
 
 function AdminProfile({ id, token, onBack, embed = false }) {
   const [admin, setAdmin] = useState(null);
@@ -14,6 +15,9 @@ function AdminProfile({ id, token, onBack, embed = false }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
   const { success, error: showError } = useToastContext();
   const isCEO =
     typeof window !== "undefined" && localStorage.getItem("role") === "CEO";
@@ -23,7 +27,7 @@ function AdminProfile({ id, token, onBack, embed = false }) {
 
     async function fetchAdmin() {
       try {
-        const response = await fetch(`http://localhost:5000/users/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/users/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error("Failed to fetch admin data");
@@ -52,7 +56,7 @@ function AdminProfile({ id, token, onBack, embed = false }) {
     setSaving(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:5000/users/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -95,7 +99,7 @@ function AdminProfile({ id, token, onBack, embed = false }) {
       fd.append("file", file, file.name);
 
       const response = await fetch(
-        `http://localhost:5000/upload/user/${id}/image`,
+        `${API_BASE_URL}/upload/user/${id}/image`,
         {
           method: "POST",
           headers: {
@@ -130,7 +134,7 @@ function AdminProfile({ id, token, onBack, embed = false }) {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/upload/user/${id}/image`,
+        `${API_BASE_URL}/upload/user/${id}/image`,
         {
           method: "DELETE",
           headers: {
@@ -189,14 +193,12 @@ function AdminProfile({ id, token, onBack, embed = false }) {
               <div className="profile-avatar">
                 {admin.imageViewUrl ||
                 admin.imageUrl ||
-                (admin.image
-                  ? `http://localhost:5000/uploads/${admin.image}`
-                  : null) ? (
+                (admin.image ? `${API_BASE_URL}/uploads/${admin.image}` : null) ? (
                   <img
                     src={
                       admin.imageViewUrl ||
                       admin.imageUrl ||
-                      `http://localhost:5000/uploads/${admin.image}`
+                      `${API_BASE_URL}/uploads/${admin.image}`
                     }
                     alt={admin.name}
                     style={{
@@ -278,7 +280,7 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                     onClick={async () => {
                       try {
                         const res = await fetch(
-                          `http://localhost:5000/users/${id}/active`,
+                          `${API_BASE_URL}/users/${id}/active`,
                           {
                             method: "PATCH",
                             headers: {
@@ -323,6 +325,127 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                 onSave={(val) => handleUpdate("birthMonthDay", val)}
                 placeholder="e.g., 07-15"
               />
+
+              {isCEO && (
+                <div
+                  style={{
+                    marginTop: 20,
+                    padding: 16,
+                    background: "rgba(156, 39, 176, 0.1)",
+                    border: "1px solid rgba(156, 39, 176, 0.3)",
+                    borderRadius: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: showPasswordChange ? 12 : 0,
+                    }}
+                  >
+                    <span style={{ fontSize: 14, fontWeight: 600 }}>
+                      🔐 Change Password
+                    </span>
+                    <button
+                      onClick={() => {
+                        setShowPasswordChange(!showPasswordChange);
+                        setNewPassword("");
+                      }}
+                      className="action-button"
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: 12,
+                        background: showPasswordChange
+                          ? "rgba(255,70,70,0.2)"
+                          : "rgba(156, 39, 176, 0.2)",
+                        border: showPasswordChange
+                          ? "1px solid #ff4646"
+                          : "1px solid rgba(156, 39, 176, 0.4)",
+                      }}
+                    >
+                      {showPasswordChange ? "Cancel" : "Change"}
+                    </button>
+                  </div>
+                  {showPasswordChange && (
+                    <div style={{ marginTop: 12 }}>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                        style={{
+                          width: "100%",
+                          marginBottom: 8,
+                          padding: 8,
+                          fontSize: 14,
+                        }}
+                      />
+                      <button
+                        onClick={async () => {
+                          if (!newPassword || newPassword.length < 4) {
+                            showError("Password must be at least 4 characters");
+                            return;
+                          }
+                          if (
+                            !window.confirm(
+                              `Change password for ${admin.name}?`
+                            )
+                          )
+                            return;
+
+                          try {
+                            setChangingPassword(true);
+                            const res = await fetch(
+                              `${API_BASE_URL}/users/${id}/change-password`,
+                              {
+                                method: "PATCH",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({ newPassword }),
+                              }
+                            );
+                            if (res.ok) {
+                              success(`Password changed for ${admin.name}`);
+                              setNewPassword("");
+                              setShowPasswordChange(false);
+                            } else {
+                              const errData = await res.json();
+                              showError(
+                                errData.message || "Failed to change password"
+                              );
+                            }
+                          } catch (e) {
+                            showError("Error: " + e.message);
+                          } finally {
+                            setChangingPassword(false);
+                          }
+                        }}
+                        disabled={
+                          !newPassword ||
+                          newPassword.length < 4 ||
+                          changingPassword
+                        }
+                        className="action-button"
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          fontSize: 14,
+                          background: "rgba(156, 39, 176, 0.25)",
+                          border: "1px solid rgba(156, 39, 176, 0.4)",
+                        }}
+                      >
+                        {changingPassword
+                          ? "Changing..."
+                          : "🔑 Update Password"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {isCEO && (
                 <div style={{ marginTop: "1rem" }}>
                   <button
@@ -335,7 +458,7 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                         return;
                       try {
                         const res = await fetch(
-                          `http://localhost:5000/users/${id}`,
+                          `${API_BASE_URL}/users/${id}`,
                           {
                             method: "DELETE",
                             headers: { Authorization: `Bearer ${token}` },

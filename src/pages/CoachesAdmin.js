@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 import CoachProfile from "./CoachProfile";
 import SearchableList from "../components/SearchableList";
 import Dialog from "../components/Dialog";
@@ -28,14 +29,14 @@ export default function CoachesAdmin({ token, readOnly = false }) {
   }, []);
 
   async function fetchCoaches() {
-    const res = await fetch("http://localhost:5000/users/coaches", {
+    const res = await fetch(`${API_BASE_URL}/users/coaches`, {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setCoaches([]);
     setCoaches(await res.json());
   }
   async function fetchCenters() {
-    const res = await fetch("http://localhost:5000/centers", {
+    const res = await fetch(`${API_BASE_URL}/centers`, {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setCenters([]);
@@ -45,7 +46,7 @@ export default function CoachesAdmin({ token, readOnly = false }) {
   async function createCoach(e) {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/users", {
+      const response = await fetch(`${API_BASE_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -94,7 +95,7 @@ export default function CoachesAdmin({ token, readOnly = false }) {
         coach.active ? "deactivate" : "activate"
       } ${coach.name}?`,
       onConfirm: async () => {
-        await fetch(`http://localhost:5000/users/${coach.id}/active`, {
+        await fetch(`${API_BASE_URL}/users/${coach.id}/active`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -113,7 +114,7 @@ export default function CoachesAdmin({ token, readOnly = false }) {
         <div className="profile-avatar small">
           {coach.image ? (
             <img
-              src={`http://localhost:5000/uploads/${coach.image}`}
+              src={`${API_BASE_URL}/uploads/${coach.image}`}
               alt={coach.name}
               style={{
                 width: "100%",

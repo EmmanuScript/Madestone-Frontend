@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 import { useToastContext } from "./ToastProvider";
 
 export default function MarkCoachAttendance({ token, userId, onCoachClick }) {
@@ -32,7 +33,7 @@ export default function MarkCoachAttendance({ token, userId, onCoachClick }) {
         }
       }
       if (uid) {
-        const ures = await fetch(`http://localhost:5000/users/${uid}`, {
+        const ures = await fetch(`${API_BASE_URL}/users/${uid}`, {
           headers: { Authorization: "Bearer " + token },
         });
         if (ures.ok) {
@@ -60,7 +61,7 @@ export default function MarkCoachAttendance({ token, userId, onCoachClick }) {
 
   async function fetchAllCenters() {
     try {
-      const res = await fetch("http://localhost:5000/centers", {
+      const res = await fetch(`${API_BASE_URL}/centers`, {
         headers: { Authorization: "Bearer " + token },
       });
       if (res.ok) {
@@ -77,7 +78,7 @@ export default function MarkCoachAttendance({ token, userId, onCoachClick }) {
   }
 
   async function fetchCoachesForCenter(cid) {
-    const res = await fetch(`http://localhost:5000/users/coaches`, {
+    const res = await fetch(`${API_BASE_URL}/users/coaches`, {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setCoaches([]);
@@ -108,7 +109,7 @@ export default function MarkCoachAttendance({ token, userId, onCoachClick }) {
     try {
       const promises = Object.entries(attendanceStatus).map(
         ([coachId, present]) => {
-          return fetch("http://localhost:5000/coach-attendance/mark", {
+          return fetch(`${API_BASE_URL}/coach-attendance/mark`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

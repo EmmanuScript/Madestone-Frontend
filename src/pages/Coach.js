@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 import { useToastContext } from "../components/ToastProvider";
 import "../styles/coach-background.css";
 
@@ -41,7 +42,7 @@ export default function Coach({
         }
       }
       if (uid) {
-        const ures = await fetch(`http://localhost:5000/users/${uid}`, {
+        const ures = await fetch(`${API_BASE_URL}/users/${uid}`, {
           headers: { Authorization: "Bearer " + token },
         });
         if (ures.ok) {
@@ -68,7 +69,7 @@ export default function Coach({
 
   async function fetchCoaches(cid) {
     try {
-      const res = await fetch(`http://localhost:5000/users/coaches`, {
+      const res = await fetch(`${API_BASE_URL}/users/coaches`, {
         headers: { Authorization: "Bearer " + token },
       });
       if (res.ok) {
@@ -85,7 +86,7 @@ export default function Coach({
   }
 
   async function fetchStudentsForCenter(cid) {
-    const res = await fetch(`http://localhost:5000/centers/${cid}/students`, {
+    const res = await fetch(`${API_BASE_URL}/centers/${cid}/students`, {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setStudents([]);
@@ -97,8 +98,8 @@ export default function Coach({
 
   async function fetchStudents() {
     if (!centerId) return setStudents([]);
-    const res = await fetch(
-      `http://localhost:5000/centers/${centerId}/students`,
+      const res = await fetch(
+        `${API_BASE_URL}/centers/${centerId}/students`,
       {
         headers: { Authorization: "Bearer " + token },
       }
@@ -131,7 +132,7 @@ export default function Coach({
       // Submit attendance for all students with a status set
       const promises = Object.entries(attendanceStatus).map(
         ([studentId, present]) => {
-          return fetch("http://localhost:5000/attendance/mark", {
+          return fetch(`${API_BASE_URL}/attendance/mark`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -174,8 +175,8 @@ export default function Coach({
     }
     setPaymentSubmitting(true);
     try {
-      const res = await fetch(
-        `http://localhost:5000/students/${paymentStudent.id}/payment`,
+        const res = await fetch(
+          `${API_BASE_URL}/students/${paymentStudent.id}/payment`,
         {
           method: "PATCH",
           headers: {

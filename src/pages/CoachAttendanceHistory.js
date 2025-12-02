@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 
 export default function CoachAttendanceHistory({ token, onCoachClick }) {
   const [centers, setCenters] = useState([]);
@@ -16,14 +17,14 @@ export default function CoachAttendanceHistory({ token, onCoachClick }) {
   }, []);
 
   async function fetchCenters() {
-    const res = await fetch("http://localhost:5000/centers", {
+    const res = await fetch(`${API_BASE_URL}/centers`, {
       headers: { Authorization: "Bearer " + token },
     });
     setCenters(await res.json());
   }
 
   async function fetchCoaches() {
-    const res = await fetch("http://localhost:5000/users/coaches", {
+    const res = await fetch(`${API_BASE_URL}/users/coaches`, {
       headers: { Authorization: "Bearer " + token },
     });
     setCoaches(await res.json());
@@ -50,7 +51,7 @@ export default function CoachAttendanceHistory({ token, onCoachClick }) {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/coach-attendance/center/${centerId}?start=${start}&end=${end}`,
+        `${API_BASE_URL}/coach-attendance/center/${centerId}?start=${start}&end=${end}`,
         { headers: { Authorization: "Bearer " + token } }
       );
       if (!res.ok) throw new Error("Failed to fetch coach attendance");
@@ -69,7 +70,7 @@ export default function CoachAttendanceHistory({ token, onCoachClick }) {
       return setError("Start and end dates are required for export");
     try {
       const res = await fetch(
-        `http://localhost:5000/coach-attendance/export/center/${centerId}?start=${start}&end=${end}`,
+        `${API_BASE_URL}/coach-attendance/export/center/${centerId}?start=${start}&end=${end}`,
         { headers: { Authorization: "Bearer " + token } }
       );
       if (!res.ok) throw new Error("Export failed");

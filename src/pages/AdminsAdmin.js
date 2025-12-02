@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 import AdminProfile from "./AdminProfile";
 import Dialog from "../components/Dialog";
 import Toast from "../components/Toast";
@@ -27,7 +28,7 @@ export default function AdminsAdmin({ token }) {
   }, []);
 
   async function fetchAdmins() {
-    const res = await fetch("http://localhost:5000/users/admins", {
+    const res = await fetch(`${API_BASE_URL}/users/admins`, {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setAdmins([]);
@@ -35,7 +36,7 @@ export default function AdminsAdmin({ token }) {
   }
 
   async function fetchCenters() {
-    const res = await fetch("http://localhost:5000/centers", {
+    const res = await fetch(`${API_BASE_URL}/centers`, {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setCenters([]);
@@ -45,7 +46,7 @@ export default function AdminsAdmin({ token }) {
   async function createAdmin(e) {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/users", {
+      const response = await fetch(`${API_BASE_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -94,7 +95,7 @@ export default function AdminsAdmin({ token }) {
         admin.active ? "deactivate" : "activate"
       } ${admin.name}?`,
       onConfirm: async () => {
-        await fetch(`http://localhost:5000/users/${admin.id}/active`, {
+        await fetch(`${API_BASE_URL}/users/${admin.id}/active`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",

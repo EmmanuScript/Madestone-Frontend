@@ -8,6 +8,7 @@ import withPageTransition from "../components/withPageTransition";
 import "../styles/animations.css";
 import "../styles/profile.css";
 import "../styles/student-profile.css";
+import { API_BASE_URL } from "../config/api";
 
 function StudentProfile({
   id,
@@ -27,7 +28,7 @@ function StudentProfile({
   useEffect(() => {
     async function fetchStudent() {
       try {
-        const response = await fetch(`http://localhost:5000/students/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/students/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error("Failed to fetch student data");
@@ -47,7 +48,7 @@ function StudentProfile({
     setSaving(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:5000/students/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/students/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -77,7 +78,7 @@ function StudentProfile({
       message: `Mark ${student.name} as present for today?`,
       onConfirm: async () => {
         try {
-          await fetch("http://localhost:5000/attendance/mark", {
+          await fetch(`${API_BASE_URL}/attendance/mark`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -89,7 +90,7 @@ function StudentProfile({
               present: true,
             }),
           });
-          const res = await fetch(`http://localhost:5000/students/${id}`);
+          const res = await fetch(`${API_BASE_URL}/students/${id}`);
           const updatedStudent = await res.json();
           setStudent(updatedStudent);
           success("Attendance marked successfully!");
@@ -128,7 +129,7 @@ function StudentProfile({
       formData.append("file", file);
 
       const response = await fetch(
-        `http://localhost:5000/upload/student/${id}/image`,
+        `${API_BASE_URL}/upload/student/${id}/image`,
         {
           method: "POST",
           headers: {
@@ -167,7 +168,7 @@ function StudentProfile({
       onConfirm: async () => {
         try {
           const response = await fetch(
-            `http://localhost:5000/upload/student/${id}/image`,
+            `${API_BASE_URL}/upload/student/${id}/image`,
             {
               method: "DELETE",
               headers: {

@@ -7,6 +7,7 @@ import withPageTransition from "../components/withPageTransition";
 import "../styles/animations.css";
 import "../styles/profile.css";
 import "../styles/embedded-pages.css";
+import { API_BASE_URL } from "../config/api";
 
 function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
   const [coach, setCoach] = useState(null);
@@ -14,6 +15,9 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
   const { success, error: showError } = useToastContext();
   const isCEO =
     typeof window !== "undefined" && localStorage.getItem("role") === "CEO";
@@ -23,7 +27,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
 
     async function fetchCoach() {
       try {
-        const response = await fetch(`http://localhost:5000/users/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/users/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error("Failed to fetch coach data");
@@ -52,7 +56,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
     setSaving(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:5000/users/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -93,7 +97,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch(`http://localhost:5000/upload/user/${id}/image`, {
+      const res = await fetch(`${API_BASE_URL}/upload/user/${id}/image`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -120,7 +124,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
   async function handleDeleteImage() {
     if (!coach) return;
     try {
-      const res = await fetch(`http://localhost:5000/upload/user/${id}/image`, {
+      const res = await fetch(`${API_BASE_URL}/upload/user/${id}/image`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -148,7 +152,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
     )
       return;
     try {
-      const res = await fetch(`http://localhost:5000/users/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/users/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -298,7 +302,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                           onClick={async () => {
                             try {
                               const res = await fetch(
-                                `http://localhost:5000/users/${id}/active`,
+                                `${API_BASE_URL}/users/${id}/active`,
                                 {
                                   method: "PATCH",
                                   headers: {
@@ -346,6 +350,132 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                       onSave={(value) => handleUpdate("birthMonthDay", value)}
                       readOnly={readOnly}
                     />
+
+                    {isCEO && (
+                      <div
+                        style={{
+                          marginTop: 20,
+                          padding: 16,
+                          background: "rgba(156, 39, 176, 0.1)",
+                          border: "1px solid rgba(156, 39, 176, 0.3)",
+                          borderRadius: 8,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            marginBottom: showPasswordChange ? 12 : 0,
+                          }}
+                        >
+                          <span style={{ fontSize: 14, fontWeight: 600 }}>
+                            🔐 Change Password
+                          </span>
+                          <button
+                            onClick={() => {
+                              setShowPasswordChange(!showPasswordChange);
+                              setNewPassword("");
+                            }}
+                            className="action-button"
+                            style={{
+                              padding: "4px 10px",
+                              fontSize: 12,
+                              background: showPasswordChange
+                                ? "rgba(255,70,70,0.2)"
+                                : "rgba(156, 39, 176, 0.2)",
+                              border: showPasswordChange
+                                ? "1px solid #ff4646"
+                                : "1px solid rgba(156, 39, 176, 0.4)",
+                            }}
+                          >
+                            {showPasswordChange ? "Cancel" : "Change"}
+                          </button>
+                        </div>
+                        {showPasswordChange && (
+                          <div style={{ marginTop: 12 }}>
+                            <input
+                              type="password"
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              placeholder="Enter new password"
+                              style={{
+                                width: "100%",
+                                marginBottom: 8,
+                                padding: 8,
+                                fontSize: 14,
+                              }}
+                            />
+                            <button
+                              onClick={async () => {
+                                if (!newPassword || newPassword.length < 4) {
+                                  showError(
+                                    "Password must be at least 4 characters"
+                                  );
+                                  return;
+                                }
+                                if (
+                                  !window.confirm(
+                                    `Change password for ${coach.name}?`
+                                  )
+                                )
+                                  return;
+
+                                try {
+                                  setChangingPassword(true);
+                                  const res = await fetch(
+                                    `${API_BASE_URL}/users/${id}/change-password`,
+                                    {
+                                      method: "PATCH",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                        Authorization: `Bearer ${token}`,
+                                      },
+                                      body: JSON.stringify({ newPassword }),
+                                    }
+                                  );
+                                  if (res.ok) {
+                                    success(
+                                      `Password changed for ${coach.name}`
+                                    );
+                                    setNewPassword("");
+                                    setShowPasswordChange(false);
+                                  } else {
+                                    const errData = await res.json();
+                                    showError(
+                                      errData.message ||
+                                        "Failed to change password"
+                                    );
+                                  }
+                                } catch (e) {
+                                  showError("Error: " + e.message);
+                                } finally {
+                                  setChangingPassword(false);
+                                }
+                              }}
+                              disabled={
+                                !newPassword ||
+                                newPassword.length < 4 ||
+                                changingPassword
+                              }
+                              className="action-button"
+                              style={{
+                                width: "100%",
+                                padding: "8px",
+                                fontSize: 14,
+                                background: "rgba(156, 39, 176, 0.25)",
+                                border: "1px solid rgba(156, 39, 176, 0.4)",
+                              }}
+                            >
+                              {changingPassword
+                                ? "Changing..."
+                                : "🔑 Update Password"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {(readOnly || isCEO) && (
                       <div style={{ marginTop: 16 }}>
                         <button
