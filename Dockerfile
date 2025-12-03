@@ -12,9 +12,12 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Set build-time environment variable
-ARG REACT_APP_API_URL
+# Set build-time environment variable with default fallback
+ARG REACT_APP_API_URL=https://madestone-backend-production.up.railway.app
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
+# Debug: Show what API URL is being used
+RUN echo "Building with API URL: $REACT_APP_API_URL"
 
 # Build the application
 RUN npm run build
