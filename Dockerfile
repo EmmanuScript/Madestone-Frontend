@@ -28,8 +28,8 @@ COPY --from=build /app/build /usr/share/nginx/html
 # Copy custom nginx template
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-# Railway sets PORT env variable, default to 8080
-ENV PORT=8080
+# Railway sets PORT env variable, default to 5001 to match Railway public port
+ENV PORT=5001
 
 # Expose the port
 EXPOSE $PORT
