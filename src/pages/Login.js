@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { API_BASE_URL } from "../config/api";
+import { apiFetch } from "../config/api";
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -12,18 +12,17 @@ export default function Login({ onLogin }) {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      const data = await apiFetch("/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: { username, password },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
       // decode token to get role and user id quickly (not secure, but fine for prototype)
       const payload = JSON.parse(atob(data.access_token.split(".")[1]));
       onLogin(data.access_token, payload.role, payload.sub);
     } catch (e) {
-      setError(e.message);
+      // Surface friendly messages; log details for debugging
+      console.error("Login failed:", e);
+      setError(e.message || "Unable to sign in. Please try again.");
     } finally {
       setLoading(false);
     }
