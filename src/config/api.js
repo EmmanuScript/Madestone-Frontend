@@ -11,17 +11,29 @@ export const API_BASE_URL =
 export async function apiFetch(path, options = {}) {
   const url = path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
   const { headers = {}, body, ...rest } = options;
+  const method = (rest.method || "GET").toUpperCase();
+
+  // Debug: log the effective URL and base
+  try {
+    // Avoid logging large bodies or sensitive data
+    console.info("[apiFetch]", method, url, { base: API_BASE_URL });
+  } catch (_) {}
 
   let finalBody = body;
   const finalHeaders = { ...headers };
 
   if (body && typeof body === "object" && !(body instanceof FormData)) {
-    finalHeaders["Content-Type"] = finalHeaders["Content-Type"] || "application/json";
+    finalHeaders["Content-Type"] =
+      finalHeaders["Content-Type"] || "application/json";
     finalBody = JSON.stringify(body);
   }
 
   try {
-    const res = await fetch(url, { headers: finalHeaders, body: finalBody, ...rest });
+    const res = await fetch(url, {
+      headers: finalHeaders,
+      body: finalBody,
+      ...rest,
+    });
 
     const contentType = res.headers.get("content-type") || "";
     const isJson = contentType.includes("application/json");
@@ -35,7 +47,9 @@ export async function apiFetch(path, options = {}) {
       }
 
       const message =
-        (errPayload && typeof errPayload === "object" && (errPayload.message || errPayload.error)) ||
+        (errPayload &&
+          typeof errPayload === "object" &&
+          (errPayload.message || errPayload.error)) ||
         (typeof errPayload === "string" ? errPayload.slice(0, 200) : null) ||
         `Request failed with status ${res.status}`;
 
@@ -64,5 +78,14 @@ export async function apiFetch(path, options = {}) {
 export function withAuth(token) {
   return {
     Authorization: token ? `Bearer ${token}` : undefined,
+  };
+}
+
+// Expose info used to construct URLs for diagnostics
+export function getApiInfo() {
+  return {
+    base: API_BASE_URL,
+    // In CRA builds, process.env vars are inlined at build time
+    envVarPresent: !!process.env.REACT_APP_API_URL,
   };
 }

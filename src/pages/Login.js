@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { apiFetch } from "../config/api";
+import { apiFetch, API_BASE_URL, getApiInfo } from "../config/api";
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -12,6 +12,12 @@ export default function Login({ onLogin }) {
     setError(null);
     setLoading(true);
     try {
+      // Log where the API base comes from before calling
+      try {
+        const info = getApiInfo();
+        console.info("[Login] Using API base", { base: API_BASE_URL, info });
+      } catch (_) {}
+
       const data = await apiFetch("/auth/login", {
         method: "POST",
         body: { username, password },

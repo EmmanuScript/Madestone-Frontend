@@ -25,7 +25,9 @@ export default class ErrorBoundary extends React.Component {
             An unexpected error occurred in the UI. Try navigating back or
             refreshing the page.
           </p>
-          <button onClick={() => this.setState({ hasError: false, error: null })}>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+          >
             Dismiss
           </button>
         </div>

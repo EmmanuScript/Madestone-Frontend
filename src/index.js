@@ -5,7 +5,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import "./styles.css";
 
 createRoot(document.getElementById("root")).render(
-	<ErrorBoundary>
-		<App />
-	</ErrorBoundary>
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
 );
