@@ -332,11 +332,14 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                             fontSize: 12,
                             cursor: "pointer",
                             background: coach.active
-                              ? "rgba(255,70,70,0.2)"
-                              : "rgba(76,175,80,0.25)",
+                              ? "rgba(255,70,70,0.35)"
+                              : "rgba(76,175,80,0.35)",
                             border: coach.active
-                              ? "1px solid #ff4646"
-                              : "1px solid #4caf50",
+                              ? "1px solid #ff7777"
+                              : "1px solid #66bb6a",
+                            color: "#ffffff",
+                            fontWeight: 600,
+                            borderRadius: 4,
                           }}
                           className="action-button"
                         >
@@ -382,11 +385,15 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                               padding: "4px 10px",
                               fontSize: 12,
                               background: showPasswordChange
-                                ? "rgba(255,70,70,0.2)"
-                                : "rgba(156, 39, 176, 0.2)",
+                                ? "rgba(255,70,70,0.35)"
+                                : "rgba(156, 39, 176, 0.35)",
                               border: showPasswordChange
-                                ? "1px solid #ff4646"
-                                : "1px solid rgba(156, 39, 176, 0.4)",
+                                ? "1px solid #ff7777"
+                                : "1px solid rgba(206, 100, 226, 0.6)",
+                              color: "#ffffff",
+                              fontWeight: 600,
+                              borderRadius: 4,
+                              cursor: "pointer",
                             }}
                           >
                             {showPasswordChange ? "Cancel" : "Change"}

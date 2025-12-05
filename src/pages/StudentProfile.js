@@ -340,11 +340,14 @@ function StudentProfile({
                           padding: "4px 12px",
                           fontSize: "13px",
                           background: student.active
-                            ? "rgba(255, 100, 100, 0.2)"
-                            : "rgba(100, 255, 100, 0.2)",
+                            ? "rgba(255, 100, 100, 0.35)"
+                            : "rgba(100, 255, 100, 0.35)",
                           border: student.active
-                            ? "1px solid rgba(255, 100, 100, 0.5)"
-                            : "1px solid rgba(100, 255, 100, 0.5)",
+                            ? "1px solid rgba(255, 130, 130, 0.7)"
+                            : "1px solid rgba(130, 255, 130, 0.7)",
+                          color: "#ffffff",
+                          fontWeight: 600,
+                          borderRadius: 4,
                         }}
                       >
                         {student.active ? "Mark Inactive" : "Mark Active"}

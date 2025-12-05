@@ -21,6 +21,7 @@ export default function AllStudents({ token }) {
   const [selected, setSelected] = useState(null);
   const [centers, setCenters] = useState([]);
   const [formErrors, setFormErrors] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchStudents();
@@ -32,7 +33,10 @@ export default function AllStudents({ token }) {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setStudents([]);
-    setStudents(await res.json());
+    const data = await res.json();
+    setStudents(
+      data.sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+    );
   }
 
   async function fetchCenters() {
@@ -313,8 +317,29 @@ export default function AllStudents({ token }) {
         </form>
       )}
 
+      <div style={{ marginBottom: 12 }}>
+        <input
+          type="text"
+          placeholder="🔍 Search student by name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            padding: "8px 12px",
+            fontSize: 14,
+            borderRadius: 4,
+            border: "1px solid #ccc",
+            width: "100%",
+            maxWidth: "300px",
+          }}
+        />
+      </div>
+
       <SearchableList
-        items={students}
+        items={students.filter(
+          (s) =>
+            !searchQuery.trim() ||
+            s.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )}
         onSelect={(student) => setSelected(student.id)}
         renderItem={renderStudent}
         searchFields={["name", "category", "center.name"]}
