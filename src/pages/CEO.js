@@ -70,20 +70,28 @@ export default function CEO({
   async function fetchPreference() {
     try {
       setPrefLoading(true);
+      console.log(
+        "[fetchPreference] Fetching from:",
+        `${API_BASE_URL}/preferences`
+      );
       const res = await fetch(`${API_BASE_URL}/preferences`, {
         headers: { Authorization: "Bearer " + token },
       });
+      console.log("[fetchPreference] Response status:", res.status);
       if (res.ok) {
         const data = await res.json();
+        console.log("[fetchPreference] Data received:", data);
         setCurrentPref({
           sessionFee: data.sessionFee || 0,
           sessionName: data.sessionName || "",
         });
         setSessionFeeInput(String(data.sessionFee || ""));
         setSessionNameInput(data.sessionName || "");
+      } else {
+        console.error("[fetchPreference] Response not OK:", res.status);
       }
     } catch (e) {
-      // ignore
+      console.error("[fetchPreference] Exception:", e);
     } finally {
       setPrefLoading(false);
     }
@@ -121,6 +129,7 @@ export default function CEO({
       return;
     }
     try {
+      console.log("[updateSessionFee] Sending:", { sessionFee: fee });
       const res = await fetch(`${API_BASE_URL}/preferences/session-fee`, {
         method: "PATCH",
         headers: {
@@ -129,21 +138,29 @@ export default function CEO({
         },
         body: JSON.stringify({ sessionFee: fee }),
       });
-      if (!res.ok) throw new Error();
+      console.log("[updateSessionFee] Response status:", res.status);
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[updateSessionFee] Error response:", errText);
+        throw new Error(`HTTP ${res.status}: ${errText}`);
+      }
       const data = await res.json();
+      console.log("[updateSessionFee] Response data:", data);
       setCurrentPref({
-        sessionFee: data.sessionFee,
-        sessionName: data.sessionName,
+        sessionFee: data.sessionFee || 0,
+        sessionName: data.sessionName || "",
       });
       success("Session fee updated and applied to all students");
     } catch (e) {
-      showError("Failed to update session fee");
+      console.error("[updateSessionFee] Exception:", e);
+      showError(e.message || "Failed to update session fee");
     }
   }
 
   async function updateSessionName() {
     const name = sessionNameInput.trim();
     try {
+      console.log("[updateSessionName] Sending:", { sessionName: name });
       const res = await fetch(`${API_BASE_URL}/preferences/session-name`, {
         method: "PATCH",
         headers: {
@@ -152,15 +169,22 @@ export default function CEO({
         },
         body: JSON.stringify({ sessionName: name }),
       });
-      if (!res.ok) throw new Error();
+      console.log("[updateSessionName] Response status:", res.status);
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[updateSessionName] Error response:", errText);
+        throw new Error(`HTTP ${res.status}: ${errText}`);
+      }
       const data = await res.json();
+      console.log("[updateSessionName] Response data:", data);
       setCurrentPref({
-        sessionFee: data.sessionFee,
-        sessionName: data.sessionName,
+        sessionFee: data.sessionFee || 0,
+        sessionName: data.sessionName || "",
       });
       success("Session name saved");
     } catch (e) {
-      showError("Failed to update session name");
+      console.error("[updateSessionName] Exception:", e);
+      showError(e.message || "Failed to update session name");
     }
   }
 
@@ -172,14 +196,25 @@ export default function CEO({
     )
       return;
     try {
+      console.log("[resetSession] Resetting session...");
       const res = await fetch(`${API_BASE_URL}/preferences/reset-session`, {
         method: "POST",
         headers: { Authorization: "Bearer " + token },
       });
-      if (!res.ok) throw new Error();
+      console.log("[resetSession] Response status:", res.status);
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[resetSession] Error response:", errText);
+        throw new Error(`HTTP ${res.status}: ${errText}`);
+      }
+      const data = await res.json();
+      console.log("[resetSession] Response data:", data);
       success("Session reset: all payments cleared and dues set");
+      // Refresh preferences after reset
+      fetchPreference();
     } catch (e) {
-      showError("Failed to reset session");
+      console.error("[resetSession] Exception:", e);
+      showError(e.message || "Failed to reset session");
     }
   }
 
