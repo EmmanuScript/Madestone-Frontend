@@ -20,14 +20,16 @@ export default function CoachAttendanceHistory({ token, onCoachClick }) {
     const res = await fetch(`${API_BASE_URL}/centers`, {
       headers: { Authorization: "Bearer " + token },
     });
-    setCenters(await res.json());
+    const data = await res.json();
+    setCenters(data.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
   }
 
   async function fetchCoaches() {
     const res = await fetch(`${API_BASE_URL}/users/coaches`, {
       headers: { Authorization: "Bearer " + token },
     });
-    setCoaches(await res.json());
+    const data = await res.json();
+    setCoaches(data.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
   }
 
   function daysBetween(s, e) {

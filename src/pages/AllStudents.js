@@ -20,6 +20,7 @@ export default function AllStudents({ token }) {
   });
   const [selected, setSelected] = useState(null);
   const [centers, setCenters] = useState([]);
+  const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     fetchStudents();
@@ -42,8 +43,38 @@ export default function AllStudents({ token }) {
     setCenters(await res.json());
   }
 
+  function validateForm() {
+    const errs = {};
+    if (!form.name || form.name.trim().length < 2) {
+      errs.name = "Name is required";
+    }
+    const ageNum = Number(form.age);
+    if (!Number.isFinite(ageNum) || ageNum <= 0) {
+      errs.age = "Age must be a positive number";
+    }
+    if (!form.category) {
+      errs.category = "Category is required";
+    }
+    // centerId is optional
+    if (
+      form.parentEmail &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.parentEmail)
+    ) {
+      errs.parentEmail = "Enter a valid email";
+    }
+    if (
+      form.parentPhoneNumber &&
+      form.parentPhoneNumber.replace(/\D/g, "").length < 7
+    ) {
+      errs.parentPhoneNumber = "Enter a valid phone number";
+    }
+    setFormErrors(errs);
+    return Object.keys(errs).length === 0;
+  }
+
   async function createStudent(e) {
     e.preventDefault();
+    if (!validateForm()) return;
 
     // create base student
     const res = await fetch(`${API_BASE_URL}/students`, {
@@ -191,6 +222,11 @@ export default function AllStudents({ token }) {
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           />
+          {formErrors.name && (
+            <div className="error" style={{ color: "#b00" }}>
+              {formErrors.name}
+            </div>
+          )}
           <input
             required
             placeholder="Age"
@@ -198,6 +234,11 @@ export default function AllStudents({ token }) {
             value={form.age}
             onChange={(e) => setForm((f) => ({ ...f, age: e.target.value }))}
           />
+          {formErrors.age && (
+            <div className="error" style={{ color: "#b00" }}>
+              {formErrors.age}
+            </div>
+          )}
           <select
             value={form.category}
             onChange={(e) =>
@@ -208,6 +249,11 @@ export default function AllStudents({ token }) {
             <option value="U10">U10</option>
             <option value="U15">U15</option>
           </select>
+          {formErrors.category && (
+            <div className="error" style={{ color: "#b00" }}>
+              {formErrors.category}
+            </div>
+          )}
           <select
             value={form.centerId}
             onChange={(e) =>
@@ -235,6 +281,11 @@ export default function AllStudents({ token }) {
               setForm((f) => ({ ...f, parentPhoneNumber: e.target.value }))
             }
           />
+          {formErrors.parentPhoneNumber && (
+            <div className="error" style={{ color: "#b00" }}>
+              {formErrors.parentPhoneNumber}
+            </div>
+          )}
 
           <input
             placeholder="Parent Email"
@@ -244,6 +295,11 @@ export default function AllStudents({ token }) {
               setForm((f) => ({ ...f, parentEmail: e.target.value }))
             }
           />
+          {formErrors.parentEmail && (
+            <div className="error" style={{ color: "#b00" }}>
+              {formErrors.parentEmail}
+            </div>
+          )}
 
           <input
             type="file"

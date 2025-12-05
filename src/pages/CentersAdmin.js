@@ -24,7 +24,8 @@ export default function CentersAdmin({
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setCenters([]);
-    setCenters(await res.json());
+    const data = await res.json();
+    setCenters(data.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
   }
 
   async function createCenter() {

@@ -10,6 +10,7 @@ export default function AttendanceHistory({ token, onStudentClick }) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchCenters();
@@ -20,7 +21,9 @@ export default function AttendanceHistory({ token, onStudentClick }) {
     const res = await fetch(`${API_BASE_URL}/centers`, {
       headers: { Authorization: "Bearer " + token },
     });
-    setCenters(await res.json());
+    const data = await res.json();
+    // Sort centers alphabetically by name
+    setCenters(data.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
   }
 
   async function fetchStudents() {
@@ -116,7 +119,15 @@ export default function AttendanceHistory({ token, onStudentClick }) {
   });
 
   const sortedDates = Array.from(allDates).sort();
-  const studentsData = Object.values(groupedData);
+  // Sort students alphabetically and filter by search
+  let studentsData = Object.values(groupedData).sort((a, b) =>
+    (a.name || "").localeCompare(b.name || "")
+  );
+  if (searchQuery.trim()) {
+    studentsData = studentsData.filter((s) =>
+      s.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
 
   const studentsForCenter = centerId
     ? students.filter((s) => s.center?.id === Number(centerId))
@@ -125,6 +136,23 @@ export default function AttendanceHistory({ token, onStudentClick }) {
   return (
     <div>
       <h3>Student Attendance History</h3>
+
+      <div style={{ marginBottom: 12 }}>
+        <input
+          type="text"
+          placeholder="🔍 Search student by name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            padding: "8px 12px",
+            fontSize: 14,
+            borderRadius: 4,
+            border: "1px solid #ccc",
+            width: "100%",
+            maxWidth: "300px",
+          }}
+        />
+      </div>
 
       <div
         style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}

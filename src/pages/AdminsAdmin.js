@@ -21,6 +21,7 @@ export default function AdminsAdmin({ token }) {
   const [selected, setSelected] = useState(null);
   const [dialog, setDialog] = useState({ isOpen: false, type: "", data: null });
   const { toasts, success, error, removeToast } = useToast();
+  const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     fetchAdmins();
@@ -32,7 +33,8 @@ export default function AdminsAdmin({ token }) {
       headers: { Authorization: "Bearer " + token },
     });
     if (!res.ok) return setAdmins([]);
-    setAdmins(await res.json());
+    const data = await res.json();
+    setAdmins(data.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
   }
 
   async function fetchCenters() {
@@ -43,8 +45,24 @@ export default function AdminsAdmin({ token }) {
     setCenters(await res.json());
   }
 
+  function validateForm() {
+    const errs = {};
+    if (!form.name || form.name.trim().length < 2) {
+      errs.name = "Name is required";
+    }
+    if (!form.username || form.username.trim().length < 3) {
+      errs.username = "Username is required";
+    }
+    if (!form.password || form.password.length < 4) {
+      errs.password = "Password must be at least 4 characters";
+    }
+    setFormErrors(errs);
+    return Object.keys(errs).length === 0;
+  }
+
   async function createAdmin(e) {
     e.preventDefault();
+    if (!validateForm()) return;
     try {
       const response = await fetch(`${API_BASE_URL}/users`, {
         method: "POST",
@@ -122,6 +140,11 @@ export default function AdminsAdmin({ token }) {
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           />
+          {formErrors.name && (
+            <div className="error" style={{ color: "#b00" }}>
+              {formErrors.name}
+            </div>
+          )}
           <input
             required
             placeholder="Username"
@@ -130,6 +153,11 @@ export default function AdminsAdmin({ token }) {
               setForm((f) => ({ ...f, username: e.target.value }))
             }
           />
+          {formErrors.username && (
+            <div className="error" style={{ color: "#b00" }}>
+              {formErrors.username}
+            </div>
+          )}
           <input
             required
             placeholder="Password"
@@ -139,6 +167,11 @@ export default function AdminsAdmin({ token }) {
               setForm((f) => ({ ...f, password: e.target.value }))
             }
           />
+          {formErrors.password && (
+            <div className="error" style={{ color: "#b00" }}>
+              {formErrors.password}
+            </div>
+          )}
           <select
             value={form.centerId}
             onChange={(e) =>
