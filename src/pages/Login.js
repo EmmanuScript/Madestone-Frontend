@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { apiFetch, API_BASE_URL, getApiInfo } from "../config/api";
+import PasswordInput from "../components/PasswordInput";
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -65,16 +66,12 @@ export default function Login({ onLogin }) {
               disabled={loading}
             />
             <label htmlFor="password">Password</label>
-            <input
-              placeholder="Enter your password"
-              type="password"
-              id="password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              disabled={loading}
-              onKeyDown={(e) => e.key === "Enter" && submit(e)}
+              placeholder="Enter your password"
+              id="password"
+              name="password"
             />
             <button
               type="submit"

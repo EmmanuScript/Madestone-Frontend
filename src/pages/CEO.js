@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { API_BASE_URL } from "../config/api";
 import { useToastContext } from "../components/ToastProvider";
 import Sidebar from "../components/Sidebar";
+import PasswordInput from "../components/PasswordInput";
 import "../styles/ceo-background.css";
 import "../styles/preferences.css";
 
@@ -715,13 +716,11 @@ export default function CEO({
                         </option>
                       ))}
                     </select>
-                    <input
-                      type="password"
+                    <PasswordInput
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter new password"
-                      disabled={!selectedUserId}
-                      style={{ marginBottom: 12 }}
+                      name="newPassword"
                     />
                     <button
                       onClick={changeUserPassword}

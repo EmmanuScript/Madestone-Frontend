@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { API_BASE_URL } from "../config/api";
 import CoachProfile from "./CoachProfile";
 import SearchableList from "../components/SearchableList";
+import PasswordInput from "../components/PasswordInput";
 import Dialog from "../components/Dialog";
 import Toast from "../components/Toast";
 import { useToast } from "../hooks/useToast";
@@ -208,14 +209,11 @@ export default function CoachesAdmin({ token, readOnly = false }) {
               {formErrors.username}
             </div>
           )}
-          <input
-            required
-            placeholder="Password"
-            type="password"
+          <PasswordInput
             value={form.password}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, password: e.target.value }))
-            }
+            onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+            placeholder="Password (min 4 characters)"
+            name="password"
           />
           {formErrors.password && (
             <div className="error" style={{ color: "#b00" }}>
