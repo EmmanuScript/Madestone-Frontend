@@ -3,6 +3,7 @@ import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { useToastContext } from "../components/ToastProvider";
 import EditableField from "../components/EditableField";
 import LoadingSpinner from "../components/LoadingSpinner";
+import PasswordInput from "../components/PasswordInput";
 import withPageTransition from "../components/withPageTransition";
 import "../styles/animations.css";
 import "../styles/profile.css";
@@ -401,17 +402,11 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                         </div>
                         {showPasswordChange && (
                           <div style={{ marginTop: 12 }}>
-                            <input
-                              type="password"
+                            <PasswordInput
                               value={newPassword}
                               onChange={(e) => setNewPassword(e.target.value)}
                               placeholder="Enter new password"
-                              style={{
-                                width: "100%",
-                                marginBottom: 8,
-                                padding: 8,
-                                fontSize: 14,
-                              }}
+                              name="newPassword"
                             />
                             <button
                               onClick={async () => {

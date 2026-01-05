@@ -657,27 +657,68 @@ a:focus-visible {
 }
 
 /* Responsive tweaks */
+@media (max-width: 1024px) {
+  body {
+    padding: 20px;
+  }
+
+  .card {
+    padding: 24px;
+  }
+}
+
 @media (max-width: 768px) {
   body {
     padding: 16px;
+    font-size: 14px;
   }
 
   .card {
     padding: 20px;
     min-width: unset;
+    border-radius: var(--border-radius-md);
   }
 
   .card h2 {
     font-size: 22px;
+    margin-bottom: 18px;
   }
 
-  .students td {
-    padding: 10px 8px;
-    font-size: 13px;
+  .card h3 {
+    font-size: 18px;
+    margin-top: 18px;
+  }
+
+  .card h4 {
+    font-size: 15px;
   }
 
   .site-header h1 {
     font-size: 20px;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 12px 12px;
+    font-size: 16px;
+    min-height: 44px;
+    border-radius: var(--border-radius-sm);
+  }
+
+  button {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+    min-height: 44px;
+    border-radius: var(--border-radius-sm);
+  }
+
+  button.btn-small {
+    width: auto;
+    padding: 8px 12px;
+    min-height: auto;
+    font-size: 12px;
   }
 
   .profile-card {
@@ -686,12 +727,234 @@ a:focus-visible {
     text-align: center;
   }
 
-  button {
-    width: 100%;
-  }
-
   .students {
     display: block;
     overflow-x: auto;
+  }
+
+  .students td {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  .students th {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  /* Grid layouts responsive */
+  .students-list,
+  .coaches-list,
+  .admins-list {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Forms on mobile */
+  .add-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .add-form input,
+  .add-form select,
+  .add-form textarea {
+    width: 100%;
+  }
+
+  .add-form button {
+    width: 100%;
+  }
+
+  /* Flex layouts responsive */
+  .preference-card {
+    flex: 1 1 100% !important;
+  }
+
+  /* Modal adjustments */
+  .dialog {
+    width: 95%;
+    max-width: 90vw;
+    padding: 1.5rem;
+  }
+
+  .dialog-button {
+    padding: 0.75rem 1rem;
+    font-size: 13px;
+    flex: 1;
+  }
+
+  /* Payment modal */
+  .payment-modal {
+    max-width: 95vw;
+    width: 90vw;
+  }
+
+  /* Sidebar adjustments */
+  .sidebar-item {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  /* Tables - hide non-essential columns on small screens */
+  table {
+    font-size: 12px;
+  }
+
+  table td,
+  table th {
+    padding: 8px 6px;
+  }
+
+  /* Search and filter inputs */
+  .search-input,
+  input[type="text"],
+  input[type="email"],
+  input[type="date"] {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  /* Error messages */
+  .error,
+  .error-message {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  /* Toast notifications */
+  .toast {
+    min-width: 280px;
+    max-width: 95vw;
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+
+  .toast-message {
+    font-size: 13px;
+  }
+
+  /* Page padding */
+  div > h2 {
+    font-size: 20px;
+  }
+
+  div > h3 {
+    font-size: 16px;
+  }
+
+  /* Preference cards grid */
+  div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 12px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: var(--border-radius-md);
+  }
+
+  .card h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .card h3 {
+    font-size: 15px;
+    margin-top: 14px;
+  }
+
+  .card h4 {
+    font-size: 13px;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 12px 12px;
+    font-size: 16px;
+    margin: 6px 0;
+  }
+
+  button {
+    padding: 12px 14px;
+    font-size: 13px;
+    min-height: 42px;
+  }
+
+  .site-header h1 {
+    font-size: 18px;
+  }
+
+  .students td,
+  .students th {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  .dialog {
+    width: 95%;
+    padding: 1rem;
+  }
+
+  .dialog h3 {
+    font-size: 14px;
+  }
+
+  .dialog p {
+    font-size: 12px;
+  }
+
+  .dialog-button {
+    padding: 0.6rem 0.8rem;
+    font-size: 12px;
+  }
+
+  .toast {
+    min-width: 90vw;
+    max-width: 95vw;
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .profile-card {
+    padding: 12px;
+  }
+
+  .profile-avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .profile-avatar.small {
+    width: 50px;
+    height: 50px;
+  }
+
+  /* Two-column layouts to single column */
+  div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Fix button groups */
+  div[style*="display: flex"][style*="gap"] {
+    flex-direction: column;
+  }
+
+  /* Action buttons */
+  .action-button {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  /* Center names in tables */
+  table td:first-child {
+    max-width: 100px;
+    word-break: break-word;
   }
 }
