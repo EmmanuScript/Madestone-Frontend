@@ -392,6 +392,13 @@ function StudentProfile({
                     onSave={(value) => handleUpdate("parentEmail", value)}
                   />
 
+                  <EditableField
+                    label="Jersey Name"
+                    value={student.jerseyName || ""}
+                    readOnly={readOnly}
+                    onSave={(value) => handleUpdate("jerseyName", value)}
+                  />
+
                   <div className="info-item attendance-section">
                     <div className="attendance-header">
                       <b>Attendance:</b> {student.attendance}
