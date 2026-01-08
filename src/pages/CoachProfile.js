@@ -59,7 +59,9 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
         if (response.ok) {
           const data = await response.json();
           if (mounted) {
-            setCenters(data.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
+            setCenters(
+              data.sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+            );
           }
         }
       } catch (err) {
@@ -381,7 +383,9 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                         >
                           <select
                             value={selectedCenterId}
-                            onChange={(e) => setSelectedCenterId(e.target.value)}
+                            onChange={(e) =>
+                              setSelectedCenterId(e.target.value)
+                            }
                             style={{
                               padding: "4px 8px",
                               fontSize: 12,
