@@ -12,8 +12,7 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
   const [isCEO, setIsCEO] = useState(false);
   const { success, error: showError } = useToastContext();
 
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [paymentStudent, setPaymentStudent] = useState(null);
+  const [editingPayment, setEditingPayment] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentSubmitting, setPaymentSubmitting] = useState(false);
 
@@ -150,14 +149,13 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
     }
   }
 
-  function openPaymentModal(s) {
-    setPaymentStudent(s);
+  function startEditingPayment(studentId) {
+    setEditingPayment(studentId);
     setPaymentAmount("");
-    setPaymentModalOpen(true);
   }
 
-  async function submitPayment() {
-    if (!paymentStudent) {
+  async function submitPayment(studentId) {
+    if (!studentId) {
       showError("No student selected");
       return;
     }
@@ -169,22 +167,19 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
     setPaymentSubmitting(true);
     try {
       console.log("Submitting payment:", {
-        studentId: paymentStudent.id,
+        studentId: studentId,
         amount: num,
-        apiUrl: `${API_BASE_URL}/students/${paymentStudent.id}/payment`,
+        apiUrl: `${API_BASE_URL}/students/${studentId}/payment`,
       });
 
-      const res = await fetch(
-        `${API_BASE_URL}/students/${paymentStudent.id}/payment`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + token,
-          },
-          body: JSON.stringify({ amount: num }),
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/students/${studentId}/payment`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({ amount: num }),
+      });
 
       console.log("Payment response status:", res.status);
 
@@ -207,8 +202,7 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
       console.log("Payment success response:", responseData);
 
       success("Payment recorded successfully");
-      setPaymentModalOpen(false);
-      setPaymentStudent(null);
+      setEditingPayment(null);
       setPaymentAmount("");
       if (centerId) fetchStudentsForCenter(centerId);
     } catch (e) {
@@ -276,6 +270,8 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
                 ? "#ffd4d4"
                 : "transparent";
 
+            const isEditingThisPayment = editingPayment === s.id;
+
             return (
               <tr key={s.id} style={{ background: statusBg }}>
                 <td>
@@ -296,13 +292,89 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
                 </td>
                 <td>{s.age}</td>
                 <td>{s.category}</td>
-                <td>{s.amountPaid}</td>
+                <td>
+                  {isEditingThisPayment ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "4px",
+                        alignItems: "center",
+                      }}
+                    >
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={paymentAmount}
+                        onChange={(e) => setPaymentAmount(e.target.value)}
+                        placeholder="Amount"
+                        autoFocus
+                        style={{
+                          width: "80px",
+                          padding: "4px 6px",
+                          fontSize: "14px",
+                          borderRadius: "4px",
+                          border: "1px solid #2a7",
+                          background: "rgba(255, 255, 255, 0.1)",
+                          color: "#fff",
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") submitPayment(s.id);
+                          if (e.key === "Escape") {
+                            setEditingPayment(null);
+                            setPaymentAmount("");
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={() => submitPayment(s.id)}
+                        disabled={paymentSubmitting}
+                        style={{
+                          padding: "4px 8px",
+                          fontSize: "12px",
+                          background: "#2a7",
+                          border: "none",
+                          color: "#fff",
+                          cursor: paymentSubmitting ? "not-allowed" : "pointer",
+                          opacity: paymentSubmitting ? 0.6 : 1,
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {paymentSubmitting ? "..." : "✓"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingPayment(null);
+                          setPaymentAmount("");
+                        }}
+                        style={{
+                          padding: "4px 8px",
+                          fontSize: "12px",
+                          background: "#ff4646",
+                          border: "none",
+                          color: "#fff",
+                          cursor: "pointer",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <span
+                      onClick={() => startEditingPayment(s.id)}
+                      style={{ cursor: "pointer" }}
+                      title="Click to add payment"
+                    >
+                      {s.amountPaid}
+                    </span>
+                  )}
+                </td>
                 <td>{s.amountDue}</td>
                 <td>
                   <button onClick={() => toggleAttendance(s.id)}>
                     {statusText}
                   </button>
-                  <button onClick={() => openPaymentModal(s)}>Pay</button>
                 </td>
               </tr>
             );
@@ -326,52 +398,6 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
           >
             {submitting ? "Submitting..." : "Submit Attendance"}
           </button>
-        </div>
-      )}
-
-      {paymentModalOpen && (
-        <div
-          className="dialog-overlay"
-          onClick={() => setPaymentModalOpen(false)}
-        >
-          <div className="dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="dialog-icon confirm">₦</div>
-            <h3>Record Payment</h3>
-            <p>{paymentStudent ? `Student: ${paymentStudent.name}` : ""}</p>
-            <div style={{ marginBottom: 16 }}>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-                placeholder="Enter amount"
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: 6,
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  background: "transparent",
-                  color: "#fff",
-                }}
-              />
-            </div>
-            <div className="dialog-actions">
-              <button
-                onClick={() => setPaymentModalOpen(false)}
-                className="dialog-button cancel"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitPayment}
-                className="dialog-button confirm"
-                disabled={paymentSubmitting}
-              >
-                {paymentSubmitting ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>
