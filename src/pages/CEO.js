@@ -4,6 +4,7 @@ import { useToastContext } from "../components/ToastProvider";
 import Sidebar from "../components/Sidebar";
 import PasswordInput from "../components/PasswordInput";
 import MonthDayPicker from "../components/MonthDayPicker";
+import MarkAttendance from "../components/MarkAttendance";
 import "../styles/ceo-background.css";
 import "../styles/preferences.css";
 
@@ -44,17 +45,6 @@ export default function CEO({
   const [newPassword, setNewPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
 
-  // Attendance marking state
-  const [students, setStudents] = useState([]);
-  const [attendanceStatus, setAttendanceStatus] = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const [attendanceLoading, setAttendanceLoading] = useState(false);
-  const [centerId, setCenterId] = useState(null);
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [paymentStudent, setPaymentStudent] = useState(null);
-  const [paymentAmount, setPaymentAmount] = useState("");
-  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
-
   const { success, error: showError } = useToastContext();
 
   // Persist view state to localStorage
@@ -66,12 +56,6 @@ export default function CEO({
     fetchCenters();
     fetchCoaches();
   }, []);
-
-  useEffect(() => {
-    if (view === "mark-attendance") {
-      fetchStudentsForAttendance();
-    }
-  }, [view]);
 
   async function fetchCenters() {
     const res = await fetch(`${API_BASE_URL}/centers`, {
@@ -140,124 +124,6 @@ export default function CEO({
       // ignore
     }
   }
-
-  async function fetchStudentsForAttendance() {
-    setAttendanceLoading(true);
-    try {
-      const centersRes = await fetch(`${API_BASE_URL}/centers`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (centersRes.ok) {
-        const centersList = await centersRes.json();
-        if (centersList.length > 0) {
-          setCenterId(centersList[0].id);
-          const studentsRes = await fetch(
-            `${API_BASE_URL}/centers/${centersList[0].id}/students`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          if (studentsRes.ok) {
-            const all = await studentsRes.json();
-            const activeStudents = all.filter(
-              (student) => student.active !== false
-            );
-            setStudents(activeStudents);
-          }
-        }
-      }
-    } catch (e) {
-      console.error("Failed to fetch students", e);
-    } finally {
-      setAttendanceLoading(false);
-    }
-  }
-
-  function toggleAttendance(studentId) {
-    setAttendanceStatus((prev) => {
-      const currentStatus = prev[studentId];
-      if (currentStatus === undefined || currentStatus === false) {
-        return { ...prev, [studentId]: true };
-      } else {
-        return { ...prev, [studentId]: false };
-      }
-    });
-  }
-
-  async function submitAttendance() {
-    const today = new Date().toISOString().slice(0, 10);
-    setSubmitting(true);
-
-    try {
-      const promises = Object.entries(attendanceStatus).map(
-        ([studentId, present]) => {
-          return fetch(`${API_BASE_URL}/attendance/mark`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + token,
-            },
-            body: JSON.stringify({
-              studentId: Number(studentId),
-              date: today,
-              present: present,
-            }),
-          });
-        }
-      );
-
-      await Promise.all(promises);
-
-      setAttendanceStatus({});
-      success("Attendance submitted successfully!");
-      fetchStudentsForAttendance();
-    } catch (err) {
-      showError("Failed to submit attendance. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  function openPaymentModal(s) {
-    setPaymentStudent(s);
-    setPaymentAmount("");
-    setPaymentModalOpen(true);
-  }
-
-  async function submitPayment() {
-    if (!paymentStudent) return;
-    const num = Number(paymentAmount);
-    if (isNaN(num) || num <= 0) {
-      showError("Enter a valid amount greater than 0");
-      return;
-    }
-    setPaymentSubmitting(true);
-    try {
-      const res = await fetch(
-        `${API_BASE_URL}/students/${paymentStudent.id}/payment`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + token,
-          },
-          body: JSON.stringify({ amount: num }),
-        }
-      );
-      if (!res.ok) throw new Error("Payment failed");
-      success("Payment recorded successfully");
-      setPaymentModalOpen(false);
-      setPaymentStudent(null);
-      setPaymentAmount("");
-      fetchStudentsForAttendance();
-    } catch (e) {
-      showError("Failed to record payment");
-    } finally {
-      setPaymentSubmitting(false);
-    }
-  }
-
-  const hasAttendanceData = Object.keys(attendanceStatus).length > 0;
 
   async function updateSessionFee() {
     const fee = Number(sessionFeeInput);
@@ -638,185 +504,13 @@ export default function CEO({
 
           {view === "mark-attendance" && (
             <div>
-              <h3>Mark Attendance</h3>
-              {attendanceLoading && (
-                <div className="loading-container">
-                  <div className="loading-spinner"></div>
-                  <p className="loading-text">Loading students...</p>
-                </div>
-              )}
-
-              {!attendanceLoading && students.length === 0 && (
-                <div className="empty-state">
-                  <div className="empty-state-icon">📚</div>
-                  <h3>No Students Found</h3>
-                  <p>There are no active students assigned yet.</p>
-                </div>
-              )}
-
-              {!attendanceLoading && students.length > 0 && (
-                <table className="students">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Age</th>
-                      <th>Category</th>
-                      <th>Paid</th>
-                      <th>Due</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {students.map((s) => {
-                      const status = attendanceStatus[s.id];
-                      const statusText =
-                        status === true
-                          ? "Present"
-                          : status === false
-                          ? "Absent"
-                          : "-";
-                      const statusBg =
-                        status === true
-                          ? "#d4f4dd"
-                          : status === false
-                          ? "#ffd4d4"
-                          : "transparent";
-
-                      return (
-                        <tr key={s.id}>
-                          <td>
-                            <button
-                              onClick={() =>
-                                onStudentClick && onStudentClick(s.id)
-                              }
-                              style={{
-                                background: "none",
-                                border: "none",
-                                padding: 0,
-                                margin: 0,
-                                color: "#2a7",
-                                textDecoration: "underline",
-                                cursor: "pointer",
-                              }}
-                            >
-                              {s.name}
-                            </button>
-                          </td>
-                          <td>{s.age}</td>
-                          <td>{s.category}</td>
-                          <td>{s.amountPaid}</td>
-                          <td>{s.amountDue}</td>
-                          <td
-                            style={{
-                              background: statusBg,
-                              fontWeight: "bold",
-                              color:
-                                status === true
-                                  ? "green"
-                                  : status === false
-                                  ? "red"
-                                  : "#999",
-                            }}
-                          >
-                            {statusText}
-                          </td>
-                          <td>
-                            <button
-                              onClick={() => toggleAttendance(s.id)}
-                              style={{
-                                background:
-                                  status === true ? "#ff9800" : "#4caf50",
-                                color: "white",
-                                border: "none",
-                                padding: "6px 12px",
-                                borderRadius: "4px",
-                                cursor: "pointer",
-                                marginRight: "4px",
-                              }}
-                            >
-                              {status === true ? "Mark Absent" : "Mark Present"}
-                            </button>
-                            <button onClick={() => openPaymentModal(s)}>
-                              Add Payment
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-
-              {!attendanceLoading && hasAttendanceData && (
-                <div style={{ marginTop: "20px", textAlign: "center" }}>
-                  <button
-                    onClick={submitAttendance}
-                    disabled={submitting}
-                    style={{
-                      background: "#2196F3",
-                      color: "white",
-                      border: "none",
-                      padding: "12px 32px",
-                      fontSize: "16px",
-                      fontWeight: "bold",
-                      borderRadius: "6px",
-                      cursor: submitting ? "not-allowed" : "pointer",
-                      opacity: submitting ? 0.6 : 1,
-                    }}
-                  >
-                    {submitting ? "Submitting..." : "Submit Attendance"}
-                  </button>
-                </div>
-              )}
-
-              {paymentModalOpen && (
-                <div
-                  className="dialog-overlay"
-                  onClick={() => setPaymentModalOpen(false)}
-                >
-                  <div className="dialog" onClick={(e) => e.stopPropagation()}>
-                    <div className="dialog-icon confirm">₦</div>
-                    <h3>Record Payment</h3>
-                    <p>
-                      {paymentStudent ? `Student: ${paymentStudent.name}` : ""}
-                    </p>
-                    <div style={{ marginBottom: 16 }}>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={paymentAmount}
-                        onChange={(e) => setPaymentAmount(e.target.value)}
-                        placeholder="Enter amount"
-                        style={{
-                          width: "100%",
-                          padding: "10px 12px",
-                          borderRadius: 6,
-                          border: "1px solid rgba(255,255,255,0.2)",
-                          background: "transparent",
-                          color: "#fff",
-                        }}
-                      />
-                    </div>
-                    <div className="dialog-actions">
-                      <button
-                        onClick={() => setPaymentModalOpen(false)}
-                        className="dialog-button cancel"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={submitPayment}
-                        className="dialog-button confirm"
-                        disabled={paymentSubmitting}
-                      >
-                        {paymentSubmitting ? "Saving..." : "Save"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <React.Suspense fallback={<div>Loading...</div>}>
+                <MarkAttendance
+                  token={token}
+                  userId={localStorage.getItem("userId")}
+                  onStudentClick={onStudentClick}
+                />
+              </React.Suspense>
             </div>
           )}
 
