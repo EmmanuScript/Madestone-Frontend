@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { useToastContext } from "../components/ToastProvider";
 import EditableField from "../components/EditableField";
+import MonthDayPicker from "../components/MonthDayPicker";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Dialog from "../components/Dialog";
 import withPageTransition from "../components/withPageTransition";
@@ -23,6 +24,9 @@ function StudentProfile({
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [dialog, setDialog] = useState({ isOpen: false, type: "", data: null });
+  const [centers, setCenters] = useState([]);
+  const [editingCenter, setEditingCenter] = useState(false);
+  const [selectedCenterId, setSelectedCenterId] = useState("");
   const { success, error: showError } = useToastContext();
 
   useEffect(() => {
@@ -41,8 +45,24 @@ function StudentProfile({
         setLoading(false);
       }
     }
+    async function fetchCenters() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/centers`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCenters(
+            data.sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+          );
+        }
+      } catch (err) {
+        // Silently fail if centers can't be fetched
+      }
+    }
     fetchStudent();
-  }, [id, showError]);
+    fetchCenters();
+  }, [id, showError, token]);
 
   const handleUpdate = async (field, value) => {
     setSaving(true);
@@ -194,6 +214,36 @@ function StudentProfile({
     });
   };
 
+  async function handleCenterUpdate() {
+    if (!selectedCenterId) {
+      showError("Please select a center");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/students/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          center: { id: Number(selectedCenterId) },
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update center");
+
+      const updatedStudent = await response.json();
+      setStudent(updatedStudent);
+      setEditingCenter(false);
+      setSelectedCenterId("");
+      success("Center updated successfully!");
+    } catch (err) {
+      showError("Failed to update center");
+    }
+  }
+
   if (loading) {
     return (
       <div className={embed ? "loading-card" : "card loading-card"}>
@@ -318,7 +368,100 @@ function StudentProfile({
                   </h3>
 
                   <div className="info-item">
-                    <b>Center:</b> {student.center?.name || "-"}
+                    <b>Center:</b>{" "}
+                    {!editingCenter ? (
+                      <>
+                        {student.center?.name || "-"}
+                        {!readOnly && (
+                          <button
+                            onClick={() => {
+                              setEditingCenter(true);
+                              setSelectedCenterId(
+                                student.center?.id?.toString() || ""
+                              );
+                            }}
+                            style={{
+                              marginLeft: 10,
+                              padding: "4px 10px",
+                              fontSize: 12,
+                              cursor: "pointer",
+                              background: "rgba(33, 150, 243, 0.35)",
+                              border: "1px solid rgba(33, 150, 243, 0.6)",
+                              color: "#ffffff",
+                              fontWeight: 600,
+                              borderRadius: 4,
+                            }}
+                            className="action-button"
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <div
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginLeft: 8,
+                        }}
+                      >
+                        <select
+                          value={selectedCenterId}
+                          onChange={(e) => setSelectedCenterId(e.target.value)}
+                          style={{
+                            padding: "4px 8px",
+                            fontSize: 12,
+                            borderRadius: 4,
+                            border: "1px solid rgba(255, 255, 255, 0.3)",
+                            background: "rgba(255, 255, 255, 0.1)",
+                            color: "#ffffff",
+                          }}
+                        >
+                          <option value="">Select Center</option>
+                          {centers.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={handleCenterUpdate}
+                          style={{
+                            padding: "4px 10px",
+                            fontSize: 12,
+                            cursor: "pointer",
+                            background: "rgba(76, 175, 80, 0.35)",
+                            border: "1px solid #66bb6a",
+                            color: "#ffffff",
+                            fontWeight: 600,
+                            borderRadius: 4,
+                          }}
+                          className="action-button"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingCenter(false);
+                            setSelectedCenterId("");
+                          }}
+                          style={{
+                            padding: "4px 10px",
+                            fontSize: 12,
+                            cursor: "pointer",
+                            background: "rgba(255, 70, 70, 0.35)",
+                            border: "1px solid #ff7777",
+                            color: "#ffffff",
+                            fontWeight: 600,
+                            borderRadius: 4,
+                          }}
+                          className="action-button"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="info-item">
@@ -361,6 +504,16 @@ function StudentProfile({
                     type="number"
                     onSave={(value) => handleUpdate("age", Number(value))}
                     readOnly={readOnly}
+                  />
+
+                  <EditableField
+                    label="Birthdate"
+                    value={student.birthMonthDay || "Not set"}
+                    onSave={(value) => handleUpdate("birthMonthDay", value)}
+                    readOnly={readOnly}
+                    customEditor={(val, setVal) => (
+                      <MonthDayPicker value={val} onChange={setVal} />
+                    )}
                   />
 
                   <EditableField

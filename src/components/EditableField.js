@@ -7,6 +7,7 @@ export default function EditableField({
   onSave,
   type = "text",
   readOnly = false,
+  customEditor = null,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -36,12 +37,16 @@ export default function EditableField({
   return (
     <div className="editable-field editing">
       <b>{label}:</b>
-      <input
-        type={type}
-        value={editValue || ""}
-        onChange={(e) => setEditValue(e.target.value)}
-        autoFocus
-      />
+      {customEditor ? (
+        customEditor(editValue, setEditValue)
+      ) : (
+        <input
+          type={type}
+          value={editValue || ""}
+          onChange={(e) => setEditValue(e.target.value)}
+          autoFocus
+        />
+      )}
       <div className="edit-actions">
         <button onClick={handleSave}>Save</button>
         <button onClick={handleCancel}>Cancel</button>

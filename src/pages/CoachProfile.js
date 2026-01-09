@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { useToastContext } from "../components/ToastProvider";
 import EditableField from "../components/EditableField";
+import MonthDayPicker from "../components/MonthDayPicker";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PasswordInput from "../components/PasswordInput";
 import withPageTransition from "../components/withPageTransition";
@@ -340,7 +341,17 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                   </h3>
                   <div className="info-group">
                     <div className="info-item">
-                      <b>Username:</b> {coach.username}
+                      <b>Username:</b>{" "}
+                      {isCEO && !readOnly ? (
+                        <EditableField
+                          label=""
+                          value={coach.username}
+                          onSave={(value) => handleUpdate("username", value)}
+                          readOnly={false}
+                        />
+                      ) : (
+                        coach.username
+                      )}
                     </div>
                     <div className="info-item">
                       <b>Center:</b>{" "}
@@ -501,9 +512,12 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                     </div>
                     <EditableField
                       label="Birthdate"
-                      value={coach.birthMonthDay}
+                      value={coach.birthMonthDay || "Not set"}
                       onSave={(value) => handleUpdate("birthMonthDay", value)}
                       readOnly={readOnly}
+                      customEditor={(val, setVal) => (
+                        <MonthDayPicker value={val} onChange={setVal} />
+                      )}
                     />
 
                     {isCEO && (
