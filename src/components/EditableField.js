@@ -8,6 +8,7 @@ export default function EditableField({
   type = "text",
   readOnly = false,
   customEditor = null,
+  inlineMode = false,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -24,19 +25,25 @@ export default function EditableField({
 
   if (!isEditing || readOnly) {
     return (
-      <div
+      <span
         className={`editable-field ${readOnly ? "read-only" : ""}`}
         onClick={readOnly ? undefined : () => setIsEditing(true)}
+        style={inlineMode ? { display: "inline", cursor: "pointer" } : {}}
       >
-        <b>{label}:</b> {value || "-"}
-        {!readOnly && <button className="edit-button">Edit</button>}
-      </div>
+        {label && <b>{label}:</b>} {value || "-"}
+        {!readOnly && !label && !inlineMode && (
+          <button className="edit-button">Edit</button>
+        )}
+      </span>
     );
   }
 
   return (
-    <div className="editable-field editing">
-      <b>{label}:</b>
+    <span
+      className={`editable-field editing ${inlineMode ? "inline-mode" : ""}`}
+      style={inlineMode ? { display: "inline", whiteSpace: "nowrap" } : {}}
+    >
+      {label && <b>{label}:</b>}
       {customEditor ? (
         customEditor(editValue, setEditValue)
       ) : (
@@ -45,12 +52,32 @@ export default function EditableField({
           value={editValue || ""}
           onChange={(e) => setEditValue(e.target.value)}
           autoFocus
+          style={
+            inlineMode ? { display: "inline-block", marginLeft: "4px" } : {}
+          }
         />
       )}
-      <div className="edit-actions">
-        <button onClick={handleSave}>Save</button>
-        <button onClick={handleCancel}>Cancel</button>
+      <div
+        className="edit-actions"
+        style={
+          inlineMode
+            ? { display: "inline-flex", marginLeft: "4px", gap: "4px" }
+            : {}
+        }
+      >
+        <button
+          onClick={handleSave}
+          style={inlineMode ? { padding: "2px 8px", fontSize: "12px" } : {}}
+        >
+          Save
+        </button>
+        <button
+          onClick={handleCancel}
+          style={inlineMode ? { padding: "2px 8px", fontSize: "12px" } : {}}
+        >
+          Cancel
+        </button>
       </div>
-    </div>
+    </span>
   );
 }

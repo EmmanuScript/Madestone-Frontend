@@ -157,7 +157,10 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
   }
 
   async function submitPayment() {
-    if (!paymentStudent) return;
+    if (!paymentStudent) {
+      showError("No student selected");
+      return;
+    }
     const num = Number(paymentAmount);
     if (isNaN(num) || num <= 0) {
       showError("Enter a valid amount greater than 0");
@@ -165,6 +168,12 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
     }
     setPaymentSubmitting(true);
     try {
+      console.log("Submitting payment:", {
+        studentId: paymentStudent.id,
+        amount: num,
+        apiUrl: `${API_BASE_URL}/students/${paymentStudent.id}/payment`,
+      });
+
       const res = await fetch(
         `${API_BASE_URL}/students/${paymentStudent.id}/payment`,
         {
@@ -176,10 +185,27 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
           body: JSON.stringify({ amount: num }),
         }
       );
+
+      console.log("Payment response status:", res.status);
+
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Payment failed");
+        let errorData = {};
+        try {
+          errorData = await res.json();
+          console.error("Payment error response:", errorData);
+        } catch (parseErr) {
+          console.error("Could not parse error response:", parseErr);
+          const text = await res.text();
+          console.error("Error response text:", text);
+        }
+        throw new Error(
+          errorData.message || `Payment failed with status ${res.status}`
+        );
       }
+
+      const responseData = await res.json();
+      console.log("Payment success response:", responseData);
+
       success("Payment recorded successfully");
       setPaymentModalOpen(false);
       setPaymentStudent(null);
@@ -187,7 +213,9 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
       if (centerId) fetchStudentsForCenter(centerId);
     } catch (e) {
       console.error("Payment error:", e);
-      showError(e.message || "Failed to record payment");
+      showError(
+        e.message || "Failed to record payment. Check console for details."
+      );
     } finally {
       setPaymentSubmitting(false);
     }
