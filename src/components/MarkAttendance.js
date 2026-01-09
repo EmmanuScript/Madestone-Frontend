@@ -273,7 +273,7 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
             const isEditingThisPayment = editingPayment === s.id;
 
             return (
-              <tr key={s.id} style={{ background: statusBg }}>
+              <tr key={s.id}>
                 <td>
                   <button
                     onClick={() => onStudentClick && onStudentClick(s.id)}
@@ -372,7 +372,23 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
                 </td>
                 <td>{s.amountDue}</td>
                 <td>
-                  <button onClick={() => toggleAttendance(s.id)}>
+                  <button
+                    onClick={() => toggleAttendance(s.id)}
+                    style={{
+                      background:
+                        status === true
+                          ? "#4caf50"
+                          : status === false
+                          ? "#ff9800"
+                          : "transparent",
+                      color: status ? "white" : "inherit",
+                      border: "1px solid #ccc",
+                      padding: "6px 12px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontWeight: status ? "bold" : "normal",
+                    }}
+                  >
                     {statusText}
                   </button>
                 </td>
