@@ -1,0 +1,37 @@
+.month-day-picker {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.month-day-picker .month-select,
+.month-day-picker .day-select {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.month-day-picker .month-select:hover,
+.month-day-picker .day-select:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.month-day-picker .month-select:focus,
+.month-day-picker .day-select:focus {
+  outline: none;
+  border-color: var(--lime);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.month-day-picker .month-select option,
+.month-day-picker .day-select option {
+  background: #1a1a2e;
+  color: #fff;
+}

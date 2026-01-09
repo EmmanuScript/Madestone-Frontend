@@ -3,6 +3,7 @@ import { API_BASE_URL } from "../config/api";
 import { useToastContext } from "../components/ToastProvider";
 import Sidebar from "../components/Sidebar";
 import PasswordInput from "../components/PasswordInput";
+import MonthDayPicker from "../components/MonthDayPicker";
 import "../styles/ceo-background.css";
 import "../styles/preferences.css";
 
@@ -262,47 +263,56 @@ export default function CEO({
   }
 
   async function addCenter() {
-    await fetch(`${API_BASE_URL}/centers`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-      body: JSON.stringify({ name: centerName }),
-    });
-    setCenterName("");
-    fetchCenters();
+    try {
+      await fetch(`${API_BASE_URL}/centers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({ name: centerName }),
+      });
+      setCenterName("");
+      fetchCenters();
+    } catch (e) {
+      showError("Failed to add center");
+    }
   }
 
   async function createCoach(e) {
     e.preventDefault();
-    await fetch(`${API_BASE_URL}/users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-      body: JSON.stringify({
-        name: coachForm.name,
-        username: coachForm.username,
-        password: coachForm.password,
-        role: "COACH",
-        center: coachForm.centerId
-          ? { id: Number(coachForm.centerId) }
-          : undefined,
-        birthMonthDay: coachForm.birthMonthDay,
-        active: true,
-      }),
-    });
-    setCoachForm({
-      name: "",
-      username: "",
-      password: "",
-      centerId: "",
-      birthMonthDay: "",
-    });
-    setShowCoachForm(false);
-    fetchCoaches();
+    try {
+      await fetch(`${API_BASE_URL}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({
+          name: coachForm.name,
+          username: coachForm.username,
+          password: coachForm.password,
+          role: "COACH",
+          center: coachForm.centerId
+            ? { id: Number(coachForm.centerId) }
+            : undefined,
+          birthMonthDay: coachForm.birthMonthDay,
+          active: true,
+        }),
+      });
+      setCoachForm({
+        name: "",
+        username: "",
+        password: "",
+        centerId: "",
+        birthMonthDay: "",
+      });
+      setShowCoachForm(false);
+      fetchCoaches();
+      success("Coach created successfully!");
+    } catch (e) {
+      showError("Failed to create coach");
+    }
   }
 
   return (
@@ -379,14 +389,14 @@ export default function CEO({
                       setCoachForm((f) => ({ ...f, username: e.target.value }))
                     }
                   />
-                  <input
+                  <PasswordInput
                     required
                     placeholder="Password"
-                    type="password"
                     value={coachForm.password}
                     onChange={(e) =>
                       setCoachForm((f) => ({ ...f, password: e.target.value }))
                     }
+                    name="coachPassword"
                   />
                   <select
                     required
@@ -402,16 +412,23 @@ export default function CEO({
                       </option>
                     ))}
                   </select>
-                  <input
-                    placeholder="Birthdate (MM-DD)"
-                    value={coachForm.birthMonthDay}
-                    onChange={(e) =>
-                      setCoachForm((f) => ({
-                        ...f,
-                        birthMonthDay: e.target.value,
-                      }))
-                    }
-                  />
+                  <div style={{ marginBottom: 12 }}>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: 4,
+                        fontSize: 13,
+                      }}
+                    >
+                      Birthdate (Optional)
+                    </label>
+                    <MonthDayPicker
+                      value={coachForm.birthMonthDay}
+                      onChange={(val) =>
+                        setCoachForm((f) => ({ ...f, birthMonthDay: val }))
+                      }
+                    />
+                  </div>
                   <button type="submit">Create Coach</button>
                 </form>
               )}

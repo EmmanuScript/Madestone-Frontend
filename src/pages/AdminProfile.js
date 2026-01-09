@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { useToastContext } from "../components/ToastProvider";
 import EditableField from "../components/EditableField";
+import MonthDayPicker from "../components/MonthDayPicker";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PasswordInput from "../components/PasswordInput";
 import withPageTransition from "../components/withPageTransition";
@@ -251,11 +252,17 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                 value={admin.name}
                 onSave={(val) => handleUpdate("name", val)}
               />
-              <EditableField
-                label="Username"
-                value={admin.username}
-                onSave={(val) => handleUpdate("username", val)}
-              />
+              {isCEO ? (
+                <EditableField
+                  label="Username"
+                  value={admin.username}
+                  onSave={(val) => handleUpdate("username", val)}
+                />
+              ) : (
+                <div style={{ marginTop: "1rem" }}>
+                  <strong>Username:</strong> {admin.username}
+                </div>
+              )}
               <div style={{ marginTop: "1rem" }}>
                 <strong>Role:</strong> {admin.role}
               </div>
@@ -319,10 +326,12 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                 )}
               </div>
               <EditableField
-                label="Birth Month-Day (MM-DD)"
-                value={admin.birthMonthDay || ""}
+                label="Birthdate"
+                value={admin.birthMonthDay || "Not set"}
                 onSave={(val) => handleUpdate("birthMonthDay", val)}
-                placeholder="e.g., 07-15"
+                customEditor={(val, setVal) => (
+                  <MonthDayPicker value={val} onChange={setVal} />
+                )}
               />
 
               {isCEO && (

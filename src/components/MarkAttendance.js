@@ -84,23 +84,33 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
   }
 
   async function fetchStudentsForCenter(cid) {
-    const res = await fetch(`${API_BASE_URL}/centers/${cid}/students`, {
-      headers: { Authorization: "Bearer " + token },
-    });
-    if (!res.ok) return setStudents([]);
-    const all = await res.json();
-    // Filter out inactive students
-    const activeStudents = all.filter((student) => student.active !== false);
-    setStudents(activeStudents);
+    try {
+      const res = await fetch(`${API_BASE_URL}/centers/${cid}/students`, {
+        headers: { Authorization: "Bearer " + token },
+      });
+      if (!res.ok) return setStudents([]);
+      const all = await res.json();
+      // Filter out inactive students
+      const activeStudents = all.filter((student) => student.active !== false);
+      setStudents(activeStudents);
+    } catch (e) {
+      console.error("Failed to fetch students for center", e);
+      setStudents([]);
+    }
   }
 
   function toggleAttendance(studentId) {
     setAttendanceStatus((prev) => {
       const currentStatus = prev[studentId];
-      if (currentStatus === undefined || currentStatus === false) {
+      // Cycle through: undefined -> true (present) -> false (absent) -> undefined
+      if (currentStatus === undefined) {
         return { ...prev, [studentId]: true };
-      } else {
+      } else if (currentStatus === true) {
         return { ...prev, [studentId]: false };
+      } else {
+        const newState = { ...prev };
+        delete newState[studentId];
+        return newState;
       }
     });
   }
@@ -166,14 +176,18 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
           body: JSON.stringify({ amount: num }),
         }
       );
-      if (!res.ok) throw new Error("Payment failed");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Payment failed");
+      }
       success("Payment recorded successfully");
       setPaymentModalOpen(false);
       setPaymentStudent(null);
       setPaymentAmount("");
       if (centerId) fetchStudentsForCenter(centerId);
     } catch (e) {
-      showError("Failed to record payment");
+      console.error("Payment error:", e);
+      showError(e.message || "Failed to record payment");
     } finally {
       setPaymentSubmitting(false);
     }
@@ -257,7 +271,9 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
                 <td>{s.amountPaid}</td>
                 <td>{s.amountDue}</td>
                 <td>
-                  <button onClick={() => toggleAttendance(s.id)}>Toggle</button>
+                  <button onClick={() => toggleAttendance(s.id)}>
+                    {statusText}
+                  </button>
                   <button onClick={() => openPaymentModal(s)}>Pay</button>
                 </td>
               </tr>
