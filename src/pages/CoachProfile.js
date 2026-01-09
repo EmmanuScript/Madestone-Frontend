@@ -340,18 +340,24 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                     />
                   </h3>
                   <div className="info-group">
-                    <div className="info-item">
+                    <div
+                      className="info-item"
+                      style={{ display: "inline-block" }}
+                    >
                       <b>Username:</b>{" "}
-                      {isCEO && !readOnly ? (
-                        <EditableField
-                          label=""
-                          value={coach.username}
-                          onSave={(value) => handleUpdate("username", value)}
-                          readOnly={false}
-                        />
-                      ) : (
-                        coach.username
-                      )}
+                      <span style={{ display: "inline" }}>
+                        {isCEO && !readOnly ? (
+                          <EditableField
+                            label=""
+                            value={coach.username}
+                            onSave={(value) => handleUpdate("username", value)}
+                            readOnly={false}
+                            inlineMode={true}
+                          />
+                        ) : (
+                          coach.username
+                        )}
+                      </span>
                     </div>
                     <div className="info-item">
                       <b>Center:</b>{" "}

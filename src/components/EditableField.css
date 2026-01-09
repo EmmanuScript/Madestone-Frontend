@@ -45,6 +45,14 @@
   color: var(--white);
 }
 
+.editable-field.editing.inline-mode input {
+  display: inline-block;
+  width: 120px;
+  margin: 0 4px;
+  padding: 4px 6px;
+  font-size: 14px;
+}
+
 .edit-actions {
   display: flex;
   gap: 8px;
