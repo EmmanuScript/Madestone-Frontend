@@ -10,11 +10,23 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
   const [attendanceStatus, setAttendanceStatus] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [isCEO, setIsCEO] = useState(false);
+  const [userRole, setUserRole] = useState("");
   const { success, error: showError } = useToastContext();
 
   const [editingPayment, setEditingPayment] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentSubmitting, setPaymentSubmitting] = useState(false);
+
+  // Check if user can manage payments (CEO or Admin only)
+  const canManagePayments =
+    userRole?.toUpperCase() === "CEO" || userRole?.toUpperCase() === "ADMIN";
+
+  console.log(
+    "MarkAttendance - userRole:",
+    userRole,
+    "canManagePayments:",
+    canManagePayments
+  );
 
   useEffect(() => {
     fetchUserAndStudents();
@@ -44,14 +56,18 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
         if (ures.ok) {
           const u = await ures.json();
 
-          // Check if user is CEO
-          if (u.role === "CEO") {
+          // Store user role
+          setUserRole(u.role || "");
+          console.log("MarkAttendance - User role:", u.role);
+
+          // Check if user is CEO or Admin
+          if (u.role === "CEO" || u.role === "Admin") {
             setIsCEO(true);
             await fetchAllCenters();
             return;
           }
 
-          // For non-CEO users, use their assigned center
+          // For non-CEO/Admin users, use their assigned center
           const cid = u.center && u.center.id;
           if (cid) {
             setCenterId(cid);
@@ -91,7 +107,15 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
       const all = await res.json();
       // Filter out inactive students
       const activeStudents = all.filter((student) => student.active !== false);
-      setStudents(activeStudents);
+
+      // Sort students by age (youngest first)
+      const sortedStudents = activeStudents.sort((a, b) => {
+        const ageA = parseInt(a.age) || 0;
+        const ageB = parseInt(b.age) || 0;
+        return ageA - ageB;
+      });
+
+      setStudents(sortedStudents);
     } catch (e) {
       console.error("Failed to fetch students for center", e);
       setStudents([]);
@@ -253,8 +277,8 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
             <th>Name</th>
             <th>Age</th>
             <th>Category</th>
-            <th>Paid</th>
-            <th>Due</th>
+            {canManagePayments && <th>Paid</th>}
+            {canManagePayments && <th>Due</th>}
             <th>Actions</th>
           </tr>
         </thead>
@@ -292,85 +316,89 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
                 </td>
                 <td>{s.age}</td>
                 <td>{s.category}</td>
-                <td>
-                  {isEditingThisPayment ? (
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "4px",
-                        alignItems: "center",
-                      }}
-                    >
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={paymentAmount}
-                        onChange={(e) => setPaymentAmount(e.target.value)}
-                        placeholder="Amount"
-                        autoFocus
+                {canManagePayments && (
+                  <td>
+                    {isEditingThisPayment ? (
+                      <div
                         style={{
-                          width: "80px",
-                          padding: "4px 6px",
-                          fontSize: "14px",
-                          borderRadius: "4px",
-                          border: "1px solid #2a7",
-                          background: "rgba(255, 255, 255, 0.1)",
-                          color: "#fff",
+                          display: "flex",
+                          gap: "4px",
+                          alignItems: "center",
                         }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") submitPayment(s.id);
-                          if (e.key === "Escape") {
+                      >
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={paymentAmount}
+                          onChange={(e) => setPaymentAmount(e.target.value)}
+                          placeholder="Amount"
+                          autoFocus
+                          style={{
+                            width: "80px",
+                            padding: "4px 6px",
+                            fontSize: "14px",
+                            borderRadius: "4px",
+                            border: "1px solid #2a7",
+                            background: "rgba(255, 255, 255, 0.1)",
+                            color: "#fff",
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") submitPayment(s.id);
+                            if (e.key === "Escape") {
+                              setEditingPayment(null);
+                              setPaymentAmount("");
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => submitPayment(s.id)}
+                          disabled={paymentSubmitting}
+                          style={{
+                            padding: "4px 8px",
+                            fontSize: "12px",
+                            background: "#2a7",
+                            border: "none",
+                            color: "#fff",
+                            cursor: paymentSubmitting
+                              ? "not-allowed"
+                              : "pointer",
+                            opacity: paymentSubmitting ? 0.6 : 1,
+                            borderRadius: "4px",
+                          }}
+                        >
+                          {paymentSubmitting ? "..." : "✓"}
+                        </button>
+                        <button
+                          onClick={() => {
                             setEditingPayment(null);
                             setPaymentAmount("");
-                          }
-                        }}
-                      />
-                      <button
-                        onClick={() => submitPayment(s.id)}
-                        disabled={paymentSubmitting}
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "12px",
-                          background: "#2a7",
-                          border: "none",
-                          color: "#fff",
-                          cursor: paymentSubmitting ? "not-allowed" : "pointer",
-                          opacity: paymentSubmitting ? 0.6 : 1,
-                          borderRadius: "4px",
-                        }}
+                          }}
+                          style={{
+                            padding: "4px 8px",
+                            fontSize: "12px",
+                            background: "#ff4646",
+                            border: "none",
+                            color: "#fff",
+                            cursor: "pointer",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <span
+                        onClick={() => startEditingPayment(s.id)}
+                        style={{ cursor: "pointer" }}
+                        title="Click to add payment"
                       >
-                        {paymentSubmitting ? "..." : "✓"}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingPayment(null);
-                          setPaymentAmount("");
-                        }}
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "12px",
-                          background: "#ff4646",
-                          border: "none",
-                          color: "#fff",
-                          cursor: "pointer",
-                          borderRadius: "4px",
-                        }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <span
-                      onClick={() => startEditingPayment(s.id)}
-                      style={{ cursor: "pointer" }}
-                      title="Click to add payment"
-                    >
-                      {s.amountPaid}
-                    </span>
-                  )}
-                </td>
-                <td>{s.amountDue}</td>
+                        {s.amountPaid}
+                      </span>
+                    )}
+                  </td>
+                )}
+                {canManagePayments && <td>{s.amountDue}</td>}
                 <td>
                   <button
                     onClick={() => toggleAttendance(s.id)}
