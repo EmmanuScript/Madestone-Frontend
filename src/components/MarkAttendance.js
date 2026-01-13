@@ -108,11 +108,15 @@ export default function MarkAttendance({ token, userId, onStudentClick }) {
       // Filter out inactive students
       const activeStudents = all.filter((student) => student.active !== false);
 
-      // Sort students by age (youngest first)
+      // Sort students by category first, then by name
       const sortedStudents = activeStudents.sort((a, b) => {
-        const ageA = parseInt(a.age) || 0;
-        const ageB = parseInt(b.age) || 0;
-        return ageA - ageB;
+        // Sort by category first
+        const categoryCompare = (a.category || "").localeCompare(
+          b.category || ""
+        );
+        if (categoryCompare !== 0) return categoryCompare;
+        // If categories are the same, sort by name
+        return (a.name || "").localeCompare(b.name || "");
       });
 
       setStudents(sortedStudents);
