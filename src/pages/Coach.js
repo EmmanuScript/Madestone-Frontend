@@ -89,7 +89,15 @@ export default function Coach({
     const all = await res.json();
     // Filter out inactive students
     const activeStudents = all.filter((student) => student.active !== false);
-    setStudents(activeStudents);
+    // Sort students by category first, then by name
+    const sortedStudents = activeStudents.sort((a, b) => {
+      const categoryCompare = (a.category || "").localeCompare(
+        b.category || ""
+      );
+      if (categoryCompare !== 0) return categoryCompare;
+      return (a.name || "").localeCompare(b.name || "");
+    });
+    setStudents(sortedStudents);
   }
 
   async function fetchStudents() {
@@ -101,7 +109,15 @@ export default function Coach({
     const all = await res.json();
     // Filter out inactive students
     const activeStudents = all.filter((student) => student.active !== false);
-    setStudents(activeStudents);
+    // Sort students by category first, then by name
+    const sortedStudents = activeStudents.sort((a, b) => {
+      const categoryCompare = (a.category || "").localeCompare(
+        b.category || ""
+      );
+      if (categoryCompare !== 0) return categoryCompare;
+      return (a.name || "").localeCompare(b.name || "");
+    });
+    setStudents(sortedStudents);
   }
 
   function toggleAttendance(studentId) {
