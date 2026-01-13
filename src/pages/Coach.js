@@ -19,10 +19,6 @@ export default function Coach({
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const { success, error: showError } = useToastContext();
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [paymentStudent, setPaymentStudent] = useState(null);
-  const [paymentAmount, setPaymentAmount] = useState("");
-  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
 
   useEffect(() => {
     fetchCoachAndStudents();
@@ -154,45 +150,6 @@ export default function Coach({
       showError("Failed to submit attendance. Please try again.");
     } finally {
       setSubmitting(false);
-    }
-  }
-
-  function openPaymentModal(s) {
-    setPaymentStudent(s);
-    setPaymentAmount("");
-    setPaymentModalOpen(true);
-  }
-
-  async function submitPayment() {
-    if (!paymentStudent) return;
-    const num = Number(paymentAmount);
-    if (isNaN(num) || num <= 0) {
-      showError("Enter a valid amount greater than 0");
-      return;
-    }
-    setPaymentSubmitting(true);
-    try {
-      const res = await fetch(
-        `${API_BASE_URL}/students/${paymentStudent.id}/payment`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + token,
-          },
-          body: JSON.stringify({ amount: num }),
-        }
-      );
-      if (!res.ok) throw new Error("Payment failed");
-      success("Payment recorded successfully");
-      setPaymentModalOpen(false);
-      setPaymentStudent(null);
-      setPaymentAmount("");
-      fetchStudents();
-    } catch (e) {
-      showError("Failed to record payment");
-    } finally {
-      setPaymentSubmitting(false);
     }
   }
 
@@ -349,13 +306,9 @@ export default function Coach({
                             padding: "6px 12px",
                             borderRadius: "4px",
                             cursor: "pointer",
-                            marginRight: "4px",
                           }}
                         >
                           {status === true ? "Mark Absent" : "Mark Present"}
-                        </button>
-                        <button onClick={() => openPaymentModal(s)}>
-                          Add Payment
                         </button>
                       </td>
                     </tr>
@@ -388,52 +341,6 @@ export default function Coach({
           )}
         </div>
       </div>
-
-      {paymentModalOpen && (
-        <div
-          className="dialog-overlay"
-          onClick={() => setPaymentModalOpen(false)}
-        >
-          <div className="dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="dialog-icon confirm">₦</div>
-            <h3>Record Payment</h3>
-            <p>{paymentStudent ? `Student: ${paymentStudent.name}` : ""}</p>
-            <div style={{ marginBottom: 16 }}>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-                placeholder="Enter amount"
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: 6,
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  background: "transparent",
-                  color: "#fff",
-                }}
-              />
-            </div>
-            <div className="dialog-actions">
-              <button
-                onClick={() => setPaymentModalOpen(false)}
-                className="dialog-button cancel"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitPayment}
-                className="dialog-button confirm"
-                disabled={paymentSubmitting}
-              >
-                {paymentSubmitting ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

@@ -44,19 +44,11 @@ export default function Login({ onLogin }) {
       <div className="login-center">
         <div className="card login-card">
           <h2 className="login-title">Welcome Back</h2>
-          <p
-            style={{
-              textAlign: "center",
-              color: "rgba(255,255,255,0.6)",
-              fontSize: "14px",
-              marginBottom: "24px",
-            }}
-          >
-            Sign in to access your dashboard
-          </p>
-          <form onSubmit={submit}>
+          <p className="login-subtitle">Sign in to access your dashboard</p>
+          <form className="login-form" onSubmit={submit}>
             <label htmlFor="username">Username</label>
             <input
+              className="login-input"
               placeholder="Enter your username"
               id="username"
               value={username}
@@ -73,22 +65,10 @@ export default function Login({ onLogin }) {
               id="password"
               name="password"
             />
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ marginTop: "16px", width: "100%" }}
-            >
+            <button className="login-button" type="submit" disabled={loading}>
               {loading ? (
                 <>
-                  <span
-                    className="loading-spinner"
-                    style={{
-                      width: 16,
-                      height: 16,
-                      borderWidth: 2,
-                      marginRight: 8,
-                    }}
-                  ></span>
+                  <span className="login-spinner"></span>
                   Signing in...
                 </>
               ) : (
@@ -96,14 +76,7 @@ export default function Login({ onLogin }) {
               )}
             </button>
           </form>
-          {error && (
-            <div
-              className="error"
-              style={{ marginTop: "16px", textAlign: "center" }}
-            >
-              ❌ {error}
-            </div>
-          )}
+          {error && <div className="login-error">❌ {error}</div>}
         </div>
       </div>
     </div>

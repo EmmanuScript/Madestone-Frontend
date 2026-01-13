@@ -463,6 +463,281 @@ a:focus-visible {
   font-weight: 600;
 }
 
+/* Password Input Component Styles */
+.password-input-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.password-input-field {
+  padding-right: 48px !important;
+  width: 100%;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 8px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  min-height: auto !important;
+  height: auto !important;
+  box-shadow: none !important;
+  min-width: auto;
+  line-height: 1;
+}
+
+.password-toggle-btn:hover:not(:disabled) {
+  color: rgba(199, 244, 100, 0.9);
+  transform: translateY(-50%);
+  box-shadow: none !important;
+}
+
+.password-toggle-btn:active:not(:disabled) {
+  transform: translateY(-50%);
+}
+
+.password-toggle-btn:focus {
+  outline: 2px solid rgba(199, 244, 100, 0.5);
+  outline-offset: 2px;
+}
+
+/* Mobile responsive styles for password input */
+@media (max-width: 768px) {
+  .password-input-field {
+    padding-right: 46px !important;
+  }
+
+  .password-toggle-btn {
+    right: 10px;
+    font-size: 16px;
+    padding: 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .password-input-field {
+    padding-right: 44px !important;
+  }
+
+  .password-toggle-btn {
+    right: -100px;
+    font-size: 16px;
+    padding: 6px !important;
+  }
+}
+
+/* Login form specific styles */
+.login-subtitle {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.login-form {
+  width: 100%;
+}
+
+.login-input {
+  width: 100%;
+}
+
+.login-button {
+  margin-top: 16px;
+  width: 100%;
+}
+
+.login-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: rgba(4, 32, 24, 0.8);
+  animation: spinner 0.6s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.login-error {
+  margin-top: 16px;
+  text-align: center;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Mobile responsive styles for login page */
+@media (max-width: 768px) {
+  body {
+    padding: 16px;
+  }
+
+  .login-container {
+    min-height: 100vh;
+  }
+
+  .site-header {
+    margin: 10px 0 8px 0;
+  }
+
+  .site-header h1 {
+    font-size: 24px;
+    margin: 0 0 8px 0;
+  }
+
+  .site-header p {
+    font-size: 14px;
+  }
+
+  .card {
+    min-width: unset;
+    max-width: 100%;
+    padding: 24px;
+    width: 100%;
+  }
+
+  .login-card {
+    max-width: 100%;
+    padding: 24px 20px;
+  }
+
+  .login-title {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .login-subtitle {
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .login-card label {
+    font-size: 12px;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 10px 12px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 42px;
+  }
+
+  button {
+    padding: 12px 16px;
+    font-size: 14px;
+    min-height: 42px;
+  }
+
+  .login-button {
+    margin-top: 14px;
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+
+  .login-error {
+    margin-top: 14px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 12px;
+  }
+
+  .site-header h1 {
+    font-size: 20px;
+  }
+
+  .site-header p {
+    font-size: 13px;
+  }
+
+  .login-card {
+    padding: 20px 16px;
+  }
+
+  .login-title {
+    font-size: 18px;
+  }
+
+  .login-subtitle {
+    font-size: 12px;
+    margin-bottom: 18px;
+  }
+
+  .login-button {
+    margin-top: 12px;
+    font-size: 14px;
+  }
+
+  .login-spinner {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+  }
+}
+
+/* Landscape orientation on mobile devices */
+@media (max-width: 768px) and (orientation: landscape) {
+  .login-container {
+    min-height: auto;
+  }
+
+  .site-header {
+    margin: 8px 0 4px 0;
+  }
+
+  .site-header h1 {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+
+  .site-header p {
+    font-size: 12px;
+  }
+
+  .login-card {
+    padding: 16px;
+    max-width: 500px;
+  }
+
+  .login-title {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .login-subtitle {
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .login-form label {
+    margin-top: 6px;
+    margin-bottom: 4px;
+  }
+}
+
 /* Admin list/grid helpers */
 .list-grid {
   display: grid;
