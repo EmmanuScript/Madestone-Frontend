@@ -85,7 +85,7 @@ export default function App() {
           id={studentProfileId}
           token={token}
           onBack={() => setStudentProfileId(null)}
-          readOnly={role === "COACH"}
+          readOnly={role !== "CEO" && role !== "ADMIN"}
         />
       );
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./EditableField.css";
 
 export default function EditableField({
@@ -12,6 +12,11 @@ export default function EditableField({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
+
+  // Sync editValue with value prop when it changes
+  useEffect(() => {
+    setEditValue(value);
+  }, [value]);
 
   const handleSave = () => {
     onSave(editValue);
@@ -46,6 +51,16 @@ export default function EditableField({
       {label && <b>{label}:</b>}
       {customEditor ? (
         customEditor(editValue, setEditValue)
+      ) : type === "textarea" ? (
+        <textarea
+          value={editValue || ""}
+          onChange={(e) => setEditValue(e.target.value)}
+          autoFocus
+          rows="4"
+          style={
+            inlineMode ? { display: "inline-block", marginLeft: "4px" } : {}
+          }
+        />
       ) : (
         <input
           type={type}
