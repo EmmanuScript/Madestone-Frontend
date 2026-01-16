@@ -592,6 +592,13 @@ function StudentProfile({
                       onSave={(value) => handleUpdate("dueResetDate", value)}
                       readOnly={readOnly}
                     />
+                    <EditableField
+                      label="Additional Notes"
+                      value={student.additionalNotes}
+                      type="textarea"
+                      onSave={(value) => handleUpdate("additionalNotes", value)}
+                      readOnly={readOnly}
+                    />
                   </div>
                 </div>
               </CSSTransition>
