@@ -53,7 +53,7 @@ function StudentProfile({
         if (response.ok) {
           const data = await response.json();
           setCenters(
-            data.sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+            data.sort((a, b) => (a.name || "").localeCompare(b.name || "")),
           );
         }
       } catch (err) {
@@ -65,25 +65,46 @@ function StudentProfile({
   }, [id, showError, token]);
 
   const handleUpdate = async (field, value) => {
+    console.log(`[StudentProfile] Updating field: ${field}, value:`, value);
     setSaving(true);
     setError(null);
     try {
+      const payload = { [field]: value };
+      console.log(
+        `[StudentProfile] Sending PATCH to /students/${id} with payload:`,
+        payload,
+      );
       const response = await fetch(`${API_BASE_URL}/students/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ [field]: value }),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed to save changes");
+      console.log(`[StudentProfile] Response status: ${response.status}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[StudentProfile] Update failed:`, errorText);
+        if (response.status === 403) {
+          showError("You are not authorized to perform this action");
+          setSaving(false);
+          return;
+        }
+        throw new Error("Failed to save changes");
+      }
 
       const updatedStudent = await response.json();
+      console.log(
+        `[StudentProfile] Update successful, received student:`,
+        updatedStudent,
+      );
       setStudent(updatedStudent);
       setSaving(false);
       success("Changes saved successfully!");
     } catch (err) {
+      console.error(`[StudentProfile] Error updating ${field}:`, err);
       setError("Failed to save changes. Please try again.");
       setSaving(false);
       showError("Failed to save changes");
@@ -138,7 +159,7 @@ function StudentProfile({
       showError(
         `Image must be smaller than 200KB. Current size: ${(
           file.size / 1024
-        ).toFixed(2)}KB`
+        ).toFixed(2)}KB`,
       );
       return;
     }
@@ -156,7 +177,7 @@ function StudentProfile({
             Authorization: `Bearer ${token}`,
           },
           body: formData,
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Failed to upload image");
@@ -194,7 +215,7 @@ function StudentProfile({
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            }
+            },
           );
 
           if (!response.ok) throw new Error("Failed to delete image");
@@ -232,7 +253,13 @@ function StudentProfile({
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to update center");
+      if (!response.ok) {
+        if (response.status === 403) {
+          showError("You are not authorized to perform this action");
+          return;
+        }
+        throw new Error("Failed to update center");
+      }
 
       const updatedStudent = await response.json();
       setStudent(updatedStudent);
@@ -377,7 +404,7 @@ function StudentProfile({
                             onClick={() => {
                               setEditingCenter(true);
                               setSelectedCenterId(
-                                student.center?.id?.toString() || ""
+                                student.center?.id?.toString() || "",
                               );
                             }}
                             style={{
@@ -550,6 +577,13 @@ function StudentProfile({
                     value={student.jerseyName || ""}
                     readOnly={readOnly}
                     onSave={(value) => handleUpdate("jerseyName", value)}
+                  />
+
+                  <EditableField
+                    label="Jersey Number"
+                    value={student.jerseyNumber || ""}
+                    readOnly={readOnly}
+                    onSave={(value) => handleUpdate("jerseyNumber", value)}
                   />
 
                   <div className="info-item attendance-section">
