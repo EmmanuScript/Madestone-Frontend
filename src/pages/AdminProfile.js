@@ -23,6 +23,8 @@ function AdminProfile({ id, token, onBack, embed = false }) {
   const { success, error: showError } = useToastContext();
   const isCEO =
     typeof window !== "undefined" && localStorage.getItem("role") === "CEO";
+  const isAdmin =
+    typeof window !== "undefined" && localStorage.getItem("role") === "ADMIN";
 
   useEffect(() => {
     let mounted = true;
@@ -67,7 +69,14 @@ function AdminProfile({ id, token, onBack, embed = false }) {
         body: JSON.stringify({ [field]: value }),
       });
 
-      if (!response.ok) throw new Error("Failed to save changes");
+      if (!response.ok) {
+        if (response.status === 403) {
+          showError("You are not authorized to perform this action");
+          setSaving(false);
+          return;
+        }
+        throw new Error("Failed to save changes");
+      }
 
       const updatedAdmin = await response.json();
       setAdmin(updatedAdmin);
@@ -90,7 +99,7 @@ function AdminProfile({ id, token, onBack, embed = false }) {
       showError(
         `Image must be smaller than 200KB. Current size: ${(
           file.size / 1024
-        ).toFixed(2)}KB`
+        ).toFixed(2)}KB`,
       );
       return;
     }
@@ -252,7 +261,7 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                 value={admin.name}
                 onSave={(val) => handleUpdate("name", val)}
               />
-              {isCEO ? (
+              {isCEO || isAdmin ? (
                 <EditableField
                   label="Username"
                   value={admin.username}
@@ -279,7 +288,7 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                 >
                   {admin.active ? "Active" : "Inactive"}
                 </span>
-                {isCEO && (
+                {(isCEO || isAdmin) && (
                   <button
                     onClick={async () => {
                       try {
@@ -292,13 +301,21 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                               Authorization: `Bearer ${token}`,
                             },
                             body: JSON.stringify({ active: !admin.active }),
-                          }
+                          },
                         );
-                        if (!res.ok) throw new Error("Failed to toggle status");
+                        if (!res.ok) {
+                          if (res.status === 403) {
+                            showError(
+                              "You are not authorized to perform this action",
+                            );
+                            return;
+                          }
+                          throw new Error("Failed to toggle status");
+                        }
                         const updated = await res.json();
                         setAdmin(updated);
                         success(
-                          `Marked ${updated.active ? "Active" : "Inactive"}`
+                          `Marked ${updated.active ? "Active" : "Inactive"}`,
                         );
                       } catch (err) {
                         showError("Failed to toggle status");
@@ -334,7 +351,7 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                 )}
               />
 
-              {isCEO && (
+              {(isCEO || isAdmin) && (
                 <div
                   style={{
                     marginTop: 20,
@@ -395,7 +412,7 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                           }
                           if (
                             !window.confirm(
-                              `Change password for ${admin.name}?`
+                              `Change password for ${admin.name}?`,
                             )
                           )
                             return;
@@ -411,17 +428,24 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                                   Authorization: `Bearer ${token}`,
                                 },
                                 body: JSON.stringify({ newPassword }),
-                              }
+                              },
                             );
                             if (res.ok) {
                               success(`Password changed for ${admin.name}`);
                               setNewPassword("");
                               setShowPasswordChange(false);
                             } else {
-                              const errData = await res.json();
-                              showError(
-                                errData.message || "Failed to change password"
-                              );
+                              if (res.status === 403) {
+                                showError(
+                                  "You are not authorized to perform this action",
+                                );
+                              } else {
+                                const errData = await res.json();
+                                showError(
+                                  errData.message ||
+                                    "Failed to change password",
+                                );
+                              }
                             }
                           } catch (e) {
                             showError("Error: " + e.message);
@@ -458,7 +482,7 @@ function AdminProfile({ id, token, onBack, embed = false }) {
                     onClick={async () => {
                       if (
                         !window.confirm(
-                          "Are you sure you want to delete this admin account? This cannot be undone."
+                          "Are you sure you want to delete this admin account? This cannot be undone.",
                         )
                       )
                         return;

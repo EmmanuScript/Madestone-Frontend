@@ -61,7 +61,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
           const data = await response.json();
           if (mounted) {
             setCenters(
-              data.sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+              data.sort((a, b) => (a.name || "").localeCompare(b.name || "")),
             );
           }
         }
@@ -93,7 +93,14 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
         body: JSON.stringify({ [field]: value }),
       });
 
-      if (!response.ok) throw new Error("Failed to save changes");
+      if (!response.ok) {
+        if (response.status === 403) {
+          showError("You are not authorized to perform this action");
+          setSaving(false);
+          return;
+        }
+        throw new Error("Failed to save changes");
+      }
 
       const updatedCoach = await response.json();
       setCoach(updatedCoach);
@@ -116,7 +123,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
       showError(
         `Image must be smaller than 200KB. Current size: ${(
           file.size / 1024
-        ).toFixed(2)}KB`
+        ).toFixed(2)}KB`,
       );
       return;
     }
@@ -175,7 +182,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
 
     if (
       !window.confirm(
-        `Are you sure you want to delete this coach account? This cannot be undone.`
+        `Are you sure you want to delete this coach account? This cannot be undone.`,
       )
     )
       return;
@@ -219,7 +226,13 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to update center");
+      if (!response.ok) {
+        if (response.status === 403) {
+          showError("You are not authorized to perform this action");
+          return;
+        }
+        throw new Error("Failed to update center");
+      }
 
       const updatedCoach = await response.json();
       setCoach(updatedCoach);
@@ -303,8 +316,8 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                 {uploading
                   ? "Uploading..."
                   : coach.imageUrl || coach.imageViewUrl
-                  ? "Change Photo"
-                  : "Upload Photo"}
+                    ? "Change Photo"
+                    : "Upload Photo"}
               </label>
               {(coach.imageUrl || coach.imageViewUrl) && (
                 <button
@@ -346,7 +359,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                     >
                       <b>Username:</b>{" "}
                       <span style={{ display: "inline" }}>
-                        {isCEO && !readOnly ? (
+                        {(isCEO || isAdmin) && !readOnly ? (
                           <EditableField
                             label=""
                             value={coach.username}
@@ -369,7 +382,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                               onClick={() => {
                                 setEditingCenter(true);
                                 setSelectedCenterId(
-                                  coach.center?.id?.toString() || ""
+                                  coach.center?.id?.toString() || "",
                                 );
                               }}
                               style={{
@@ -466,7 +479,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                       >
                         {coach.active ? "Active" : "Inactive"}
                       </span>
-                      {isCEO && (
+                      {(isCEO || isAdmin) && (
                         <button
                           onClick={async () => {
                             try {
@@ -481,15 +494,23 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                                   body: JSON.stringify({
                                     active: !coach.active,
                                   }),
-                                }
+                                },
                               );
-                              if (!res.ok) throw new Error("Failed");
+                              if (!res.ok) {
+                                if (res.status === 403) {
+                                  showError(
+                                    "You are not authorized to perform this action",
+                                  );
+                                  return;
+                                }
+                                throw new Error("Failed");
+                              }
                               const updated = await res.json();
                               setCoach(updated);
                               success(
                                 `Marked ${
                                   updated.active ? "Active" : "Inactive"
-                                }`
+                                }`,
                               );
                             } catch (err) {
                               showError("Failed to toggle status");
@@ -526,7 +547,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                       )}
                     />
 
-                    {isCEO && (
+                    {(isCEO || isAdmin) && (
                       <div
                         style={{
                           marginTop: 20,
@@ -583,13 +604,13 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                               onClick={async () => {
                                 if (!newPassword || newPassword.length < 4) {
                                   showError(
-                                    "Password must be at least 4 characters"
+                                    "Password must be at least 4 characters",
                                   );
                                   return;
                                 }
                                 if (
                                   !window.confirm(
-                                    `Change password for ${coach.name}?`
+                                    `Change password for ${coach.name}?`,
                                   )
                                 )
                                   return;
@@ -605,20 +626,26 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                                         Authorization: `Bearer ${token}`,
                                       },
                                       body: JSON.stringify({ newPassword }),
-                                    }
+                                    },
                                   );
                                   if (res.ok) {
                                     success(
-                                      `Password changed for ${coach.name}`
+                                      `Password changed for ${coach.name}`,
                                     );
                                     setNewPassword("");
                                     setShowPasswordChange(false);
                                   } else {
-                                    const errData = await res.json();
-                                    showError(
-                                      errData.message ||
-                                        "Failed to change password"
-                                    );
+                                    if (res.status === 403) {
+                                      showError(
+                                        "You are not authorized to perform this action",
+                                      );
+                                    } else {
+                                      const errData = await res.json();
+                                      showError(
+                                        errData.message ||
+                                          "Failed to change password",
+                                      );
+                                    }
                                   }
                                 } catch (e) {
                                   showError("Error: " + e.message);

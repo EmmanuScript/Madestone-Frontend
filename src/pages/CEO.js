@@ -75,7 +75,7 @@ export default function CEO({
       setPrefLoading(true);
       console.log(
         "[fetchPreference] Fetching from:",
-        `${API_BASE_URL}/preferences`
+        `${API_BASE_URL}/preferences`,
       );
       const res = await fetch(`${API_BASE_URL}/preferences`, {
         headers: { Authorization: "Bearer " + token },
@@ -116,7 +116,7 @@ export default function CEO({
         const users = await res.json();
         // Filter to only show coaches and admins
         const filteredUsers = users.filter(
-          (u) => u.role === "COACH" || u.role === "ADMIN"
+          (u) => u.role === "COACH" || u.role === "ADMIN",
         );
         setAllUsers(filteredUsers);
       }
@@ -143,6 +143,10 @@ export default function CEO({
       });
       console.log("[updateSessionFee] Response status:", res.status);
       if (!res.ok) {
+        if (res.status === 403) {
+          showError("You are not authorized to perform this action");
+          return;
+        }
         const errText = await res.text();
         console.error("[updateSessionFee] Error response:", errText);
         throw new Error(`HTTP ${res.status}: ${errText}`);
@@ -174,6 +178,10 @@ export default function CEO({
       });
       console.log("[updateSessionName] Response status:", res.status);
       if (!res.ok) {
+        if (res.status === 403) {
+          showError("You are not authorized to perform this action");
+          return;
+        }
         const errText = await res.text();
         console.error("[updateSessionName] Error response:", errText);
         throw new Error(`HTTP ${res.status}: ${errText}`);
@@ -194,7 +202,7 @@ export default function CEO({
   async function resetSession() {
     if (
       !window.confirm(
-        "Reset session? This will zero payments and set due to session fee."
+        "Reset session? This will zero payments and set due to session fee.",
       )
     )
       return;
@@ -206,6 +214,10 @@ export default function CEO({
       });
       console.log("[resetSession] Response status:", res.status);
       if (!res.ok) {
+        if (res.status === 403) {
+          showError("You are not authorized to perform this action");
+          return;
+        }
         const errText = await res.text();
         console.error("[resetSession] Error response:", errText);
         throw new Error(`HTTP ${res.status}: ${errText}`);
@@ -246,15 +258,19 @@ export default function CEO({
             Authorization: "Bearer " + token,
           },
           body: JSON.stringify({ newPassword }),
-        }
+        },
       );
       if (res.ok) {
         success(`Password changed for ${selectedUser?.name}`);
         setSelectedUserId("");
         setNewPassword("");
       } else {
-        const errData = await res.json();
-        showError(errData.message || "Failed to change password");
+        if (res.status === 403) {
+          showError("You are not authorized to perform this action");
+        } else {
+          const errData = await res.json();
+          showError(errData.message || "Failed to change password");
+        }
       }
     } catch (e) {
       showError("Error: " + e.message);
@@ -766,9 +782,9 @@ const CoachesAdmin = React.lazy(() => import("./CoachesAdmin"));
 const AdminsAdmin = React.lazy(() => import("./AdminsAdmin"));
 const CentersAdmin = React.lazy(() => import("./CentersAdmin"));
 const AttendanceHistory = React.lazy(() => import("./AttendanceHistory"));
-const MarkCoachAttendance = React.lazy(() =>
-  import("../components/MarkCoachAttendance")
+const MarkCoachAttendance = React.lazy(
+  () => import("../components/MarkCoachAttendance"),
 );
-const CoachAttendanceHistory = React.lazy(() =>
-  import("./CoachAttendanceHistory")
+const CoachAttendanceHistory = React.lazy(
+  () => import("./CoachAttendanceHistory"),
 );
