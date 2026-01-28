@@ -35,7 +35,7 @@ export default function AllStudents({ token }) {
     if (!res.ok) return setStudents([]);
     const data = await res.json();
     setStudents(
-      data.sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+      data.sort((a, b) => (a.name || "").localeCompare(b.name || "")),
     );
   }
 
@@ -80,79 +80,86 @@ export default function AllStudents({ token }) {
     e.preventDefault();
     if (!validateForm()) return;
 
-    // create base student
-    const res = await fetch(`${API_BASE_URL}/students`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-      body: JSON.stringify({
-        name: form.name,
-        age: Number(form.age),
-        category: form.category,
-        school: form.school || undefined,
-        parentPhoneNumber: form.parentPhoneNumber || undefined,
-        parentEmail: form.parentEmail || undefined,
-        center: form.centerId ? { id: Number(form.centerId) } : undefined,
-      }),
-    });
+    try {
+      // create base student
+      const res = await fetch(`${API_BASE_URL}/students`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({
+          name: form.name,
+          age: Number(form.age),
+          category: form.category,
+          school: form.school || undefined,
+          parentPhoneNumber: form.parentPhoneNumber || undefined,
+          parentEmail: form.parentEmail || undefined,
+          center: form.centerId ? { id: Number(form.centerId) } : undefined,
+        }),
+      });
 
-    if (!res.ok) {
-      alert("Failed to create student");
-      return;
-    }
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Failed to create student:", errorText);
+        alert(`Failed to create student: ${errorText || res.statusText}`);
+        return;
+      }
 
-    const created = await res.json();
+      const created = await res.json();
 
-    // if an image file was selected, upload it
-    if (form.file) {
-      // Validate file size (200KB max)
-      const maxFileSize = 200 * 1024; // 200KB
-      if (form.file.size > maxFileSize) {
-        console.warn(
-          `Image file too large (${(form.file.size / 1024).toFixed(
-            2
-          )}KB). Maximum is 200KB`
-        );
-      } else {
-        try {
-          const fd = new FormData();
-          fd.append("file", form.file, form.file.name);
-
-          const upl = await fetch(
-            `${API_BASE_URL}/upload/student/${created.id}/image`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: "Bearer " + token,
-              },
-              body: fd,
-            }
+      // if an image file was selected, upload it
+      if (form.file) {
+        // Validate file size (200KB max)
+        const maxFileSize = 200 * 1024; // 200KB
+        if (form.file.size > maxFileSize) {
+          console.warn(
+            `Image file too large (${(form.file.size / 1024).toFixed(
+              2,
+            )}KB). Maximum is 200KB`,
           );
+        } else {
+          try {
+            const fd = new FormData();
+            fd.append("file", form.file, form.file.name);
 
-          if (!upl.ok) {
-            console.warn("Image upload failed for student", created.id);
+            const upl = await fetch(
+              `${API_BASE_URL}/upload/student/${created.id}/image`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: "Bearer " + token,
+                },
+                body: fd,
+              },
+            );
+
+            if (!upl.ok) {
+              console.warn("Image upload failed for student", created.id);
+            }
+          } catch (err) {
+            console.warn("Image upload error", err);
           }
-        } catch (err) {
-          console.warn("Image upload error", err);
         }
       }
-    }
 
-    // reset form and refresh list
-    setForm({
-      name: "",
-      age: 8,
-      category: "U10",
-      centerId: "",
-      school: "",
-      parentPhoneNumber: "",
-      parentEmail: "",
-      file: null,
-    });
-    setShowForm(false);
-    fetchStudents();
+      // reset form and refresh list
+      setForm({
+        name: "",
+        age: 8,
+        category: "U10",
+        centerId: "",
+        school: "",
+        parentPhoneNumber: "",
+        parentEmail: "",
+        file: null,
+      });
+      setShowForm(false);
+      fetchStudents();
+    } catch (error) {
+      console.error("Error creating student:", error);
+      alert(`Failed to create student: ${error.message}`);
+    }
   }
 
   if (selected)
@@ -338,7 +345,7 @@ export default function AllStudents({ token }) {
         items={students.filter(
           (s) =>
             !searchQuery.trim() ||
-            s.name.toLowerCase().includes(searchQuery.toLowerCase())
+            s.name.toLowerCase().includes(searchQuery.toLowerCase()),
         )}
         onSelect={(student) => setSelected(student.id)}
         renderItem={renderStudent}
