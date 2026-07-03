@@ -24,6 +24,7 @@ export default function CoachesAdmin({ token, readOnly = false }) {
   const [dialog, setDialog] = useState({ isOpen: false, type: "", data: null });
   const { toasts, success, error, removeToast } = useToast();
   const [formErrors, setFormErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchCoaches();
@@ -64,6 +65,8 @@ export default function CoachesAdmin({ token, readOnly = false }) {
   async function createCoach(e) {
     e.preventDefault();
     if (!validateForm()) return;
+    if (submitting) return;
+    setSubmitting(true);
     try {
       const response = await fetch(`${API_BASE_URL}/users`, {
         method: "POST",
@@ -81,14 +84,19 @@ export default function CoachesAdmin({ token, readOnly = false }) {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to create coach");
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to create coach");
+      }
 
       setForm({ name: "", username: "", password: "", centerId: "" });
       setShowForm(false);
       await fetchCoaches();
       success("Coach created successfully!");
     } catch (err) {
-      error("Failed to create coach. Please try again.");
+      error(err.message || "Failed to create coach. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -98,7 +106,7 @@ export default function CoachesAdmin({ token, readOnly = false }) {
         <CoachProfile
           id={selected}
           token={token}
-          onBack={() => setSelected(null)}
+          onBack={() => { setSelected(null); fetchCoaches(); }}
           embed={true}
         />
       </div>
@@ -233,7 +241,9 @@ export default function CoachesAdmin({ token, readOnly = false }) {
               </option>
             ))}
           </select>
-          <button type="submit">Create</button>
+          <button type="submit" disabled={submitting}>
+            {submitting ? "Creating..." : "Create"}
+          </button>
         </form>
       )}
 
