@@ -676,7 +676,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                       </div>
                     )}
 
-                    {(readOnly || isCEO) && (
+                    {(readOnly || isCEO || isAdmin) && (
                       <div style={{ marginTop: 16 }}>
                         <button
                           onClick={handleDeleteAccount}
@@ -686,7 +686,7 @@ function CoachProfile({ id, token, onBack, embed = false, readOnly = false }) {
                             border: "1px solid rgba(255,0,0,0.4)",
                           }}
                         >
-                          {isCEO && !readOnly
+                          {(isCEO || isAdmin) && !readOnly
                             ? "Delete Coach Account"
                             : "Delete My Account"}
                         </button>
