@@ -42,7 +42,7 @@ export default function Admin({
       case "coaches":
         return (
           <Suspense fallback={<div>Loading coaches...</div>}>
-            <CoachesAdmin token={token} readOnly={true} />
+            <CoachesAdmin token={token} />
           </Suspense>
         );
       case "centers":
