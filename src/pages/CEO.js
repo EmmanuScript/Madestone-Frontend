@@ -45,6 +45,7 @@ export default function CEO({
   const [newPassword, setNewPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
 
+  const [coachSubmitting, setCoachSubmitting] = useState(false);
   const { success, error: showError } = useToastContext();
 
   // Persist view state to localStorage
@@ -298,8 +299,10 @@ export default function CEO({
 
   async function createCoach(e) {
     e.preventDefault();
+    if (coachSubmitting) return;
+    setCoachSubmitting(true);
     try {
-      await fetch(`${API_BASE_URL}/users`, {
+      const res = await fetch(`${API_BASE_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -317,6 +320,10 @@ export default function CEO({
           active: true,
         }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to create coach");
+      }
       setCoachForm({
         name: "",
         username: "",
@@ -328,7 +335,9 @@ export default function CEO({
       fetchCoaches();
       success("Coach created successfully!");
     } catch (e) {
-      showError("Failed to create coach");
+      showError(e.message || "Failed to create coach");
+    } finally {
+      setCoachSubmitting(false);
     }
   }
 
@@ -446,7 +455,9 @@ export default function CEO({
                       }
                     />
                   </div>
-                  <button type="submit">Create Coach</button>
+                  <button type="submit" disabled={coachSubmitting}>
+                    {coachSubmitting ? "Creating..." : "Create Coach"}
+                  </button>
                 </form>
               )}
               <ul>
